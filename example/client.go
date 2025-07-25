@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/andig/evopt/client"
+	"github.com/guptarohit/asciigraph"
 	"github.com/olekukonko/tablewriter"
 	"github.com/olekukonko/tablewriter/tw"
 	"github.com/samber/lo"
@@ -150,6 +151,49 @@ func main() {
 
 		table.Render()
 	}
+
+	{
+		var power, soc [][]float64
+
+		power = append(power, toFloat64Slice(*res.GridImport, 1))
+		power = append(power, toFloat64Slice(*res.GridExport, 1))
+		power = append(power, toFloat64Slice(req.TimeSeries.Ft, 1))
+
+		powerSeries := []string{"Grid Import", "Grid Export", "Forecast"}
+		var socSeries []string
+
+		for i, b := range *res.Batteries {
+			powerSeries = append(powerSeries,
+				fmt.Sprintf("Bat %d ChargingPower", i+1),
+				fmt.Sprintf("Bat %d DischargingPower", i+1),
+			)
+			socSeries = append(socSeries, fmt.Sprintf("Bat %d SoC", i+1))
+
+			power = append(power, toFloat64Slice(*b.ChargingPower, 1))
+			power = append(power, toFloat64Slice(*b.DischargingPower, 1))
+			soc = append(soc, toFloat64Slice(*b.StateOfCharge, req.Batteries[i].SMax/100))
+		}
+
+		fmt.Println(asciigraph.PlotMany(soc, asciigraph.Precision(1),
+			asciigraph.Width(150),
+			asciigraph.Height(10),
+			asciigraph.Caption("Optimization - SoC"),
+			asciigraph.SeriesLegends(socSeries...),
+			asciigraph.SeriesColors(lo.RepeatBy(len(socSeries), func(_ int) asciigraph.AnsiColor {
+				return asciigraph.White
+			})...),
+		))
+
+		fmt.Println(asciigraph.PlotMany(power, asciigraph.Precision(0),
+			asciigraph.Width(150),
+			asciigraph.Height(20),
+			asciigraph.Caption("Optimization - Power Flow"),
+			asciigraph.SeriesLegends(powerSeries...),
+			asciigraph.SeriesColors(lo.RepeatBy(len(powerSeries), func(_ int) asciigraph.AnsiColor {
+				return asciigraph.White
+			})...),
+		))
+	}
 }
 
 func str(f float32) string {
@@ -164,4 +208,13 @@ func str2(f float32) string {
 		return "-"
 	}
 	return fmt.Sprintf("%.2f", f)
+}
+
+// toFloat64Slice converts a slice of float32 to a slice of float64.
+func toFloat64Slice(in []float32, div float32) []float64 {
+	out := make([]float64, len(in))
+	for i, v := range in {
+		out[i] = float64(v / div)
+	}
+	return out
 }
