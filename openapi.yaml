@@ -80,6 +80,7 @@ paths:
                   d_max: 5000
                   p_a: 0.20
               time_series:
+                dt: [3600, 3600, 3600, 3600, 3600, 3600]
                 gt: [3000, 4000, 5000, 4500, 3500, 3000]
                 ft: [2000, 6000, 8000, 7000, 4000, 1000]
                 p_N: [0.30, 0.25, 0.20, 0.22, 0.28, 0.32]
@@ -205,7 +206,7 @@ components:
         p_a:
           type: number
           minimum: 0
-          description: Value per Wh at end of time horizon (economic value of remaining energy)
+          description: Value EUR per kWh at end of time horizon (economic value of remaining energy)
           example: 0.25
         s_goal:
           type: array
@@ -218,38 +219,46 @@ components:
     TimeSeries:
       type: object
       required:
+        - dt
         - gt
         - ft
         - p_N
         - p_E
       properties:
+        dt:
+          type: array
+          items:
+            type: number
+            minimum: 0
+          description: Duration in seconds for each time step (s)
+          example: [3600, 3600, 3600, 3600, 3600, 3600]
         gt:
           type: array
           items:
             type: number
             minimum: 0
-          description: Required total energy demand at each time step (Wh)
+          description: Required avg. power demand at each time step (W)
           example: [3000, 4000, 5000, 4500, 3500, 3000]
         ft:
           type: array
           items:
             type: number
             minimum: 0
-          description: Forecasted energy production (e.g., solar PV) at each time step (Wh)
+          description: Forecasted power production (e.g., solar PV) at each time step (W)
           example: [2000, 6000, 8000, 7000, 4000, 1000]
         p_N:
           type: array
           items:
             type: number
             minimum: 0
-          description: Grid import price per Wh at each time step (currency units/Wh)
+          description: Grid import price per Wh at each time step (currency units/kWh)
           example: [0.30, 0.25, 0.20, 0.22, 0.28, 0.32]
         p_E:
           type: array
           items:
             type: number
             minimum: 0
-          description: Grid export price per Wh at each time step (currency units/Wh)
+          description: Grid export price per Wh at each time step (currency units/kWh)
           example: [0.15, 0.12, 0.10, 0.11, 0.14, 0.16]
 
     OptimizationInput:
@@ -335,14 +344,14 @@ components:
           items:
             type: number
             minimum: 0
-          description: Energy imported from grid at each time step (Wh)
+          description: Power imported from grid at each time step (W)
           example: [1000, 0, 0, 0, 0, 2000]
         grid_export:
           type: array
           items:
             type: number
             minimum: 0
-          description: Energy exported to grid at each time step (Wh)
+          description: Power exported to grid at each time step (W)
           example: [0, 2000, 3000, 2500, 500, 0]
         flow_direction:
           type: array
