@@ -37,6 +37,18 @@ type BatteryConfig struct {
 	// CMin Minimum charge power in W
 	CMin float32 `json:"c_min"`
 
+	// Configuration List of key-value-pairs configuring the battery behavior and control constraints.
+	// Available configuration items are:
+	// - AllowChargingFromGrid: Controls whether the battery can be charged from the grid.
+	//   - True: The battery can be charged from grid at any time. The actual decision is subject
+	//     to the optimization.
+	//   - False: (default) The battery cannot be charged while power is retrieved from grid
+	// - AllowDischargingToGrid: Controls whether the battery can discharge to grid.
+	//   - True: The battery can discharge to the grid at any time. The actual decision is
+	//     subject to the optimization.
+	//   - False: (default) The battery cannot be discharged while power is exported to the grid.
+	Configuration *[]ConfigItem `json:"configuration,omitempty"`
+
 	// DMax Maximum discharge power in W
 	DMax float32 `json:"d_max"`
 
@@ -68,6 +80,17 @@ type BatteryResult struct {
 	StateOfCharge *[]float32 `json:"state_of_charge,omitempty"`
 }
 
+// ConfigItem defines model for ConfigItem.
+type ConfigItem struct {
+	// Key The key string of the configuration item
+	Key string `json:"key"`
+
+	// Value A string representing the value of the configuration item. If the value
+	// cannot be interpreted as a value of the expected type or does not represent a
+	// permitted value, the default value will be used.
+	Value string `json:"value"`
+}
+
 // Error defines model for Error.
 type Error struct {
 	// Message Error message describing what went wrong
@@ -78,6 +101,9 @@ type Error struct {
 type OptimizationInput struct {
 	// Batteries Configuration for all batteries in the system
 	Batteries []BatteryConfig `json:"batteries"`
+
+	// Configuration List of key-value-pairs configuring the overall system model and the optimization
+	Configuration *[]ConfigItem `json:"configuration,omitempty"`
 
 	// EtaC Charging efficiency (0 to 1)
 	EtaC *float32 `json:"eta_c,omitempty"`
