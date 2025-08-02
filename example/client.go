@@ -71,8 +71,8 @@ func main() {
 				strconv.Itoa(t + 1),
 				str((req.TimeSeries.Ft)[t]),
 				str((req.TimeSeries.Gt)[t]),
-				str2((req.TimeSeries.PN)[t]),
-				str2((req.TimeSeries.PE)[t]),
+				str2((req.TimeSeries.PN)[t] * 1000.),
+				str2((req.TimeSeries.PE)[t] * 1000.),
 			}
 
 			for _, bat := range req.Batteries {
