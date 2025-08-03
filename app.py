@@ -42,7 +42,7 @@ battery_config_model = api.model('BatteryConfig', {
     's_min': fields.Float(required=True, description='Minimum state of charge (Wh)'),
     's_max': fields.Float(required=True, description='Maximum state of charge (Wh)'),
     's_initial': fields.Float(required=True, description='Initial state of charge (Wh)'),
-    'p_demand': fields.List(fields.Float, required=False, description='Minimum charging plan for this battery and each time step (Wh)'),
+    'p_demand': fields.List(fields.Float, required=False, description='Minimum charge demand per time step (Wh)'),
     's_goal': fields.List(fields.Float, required=False, description='Goal state of charge at each time step (Wh)'),
     'c_min': fields.Float(required=True, description='Minimum charge power (W)'),
     'c_max': fields.Float(required=True, description='Maximum charge power (W)'),
