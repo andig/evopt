@@ -38,13 +38,9 @@ api = Api(app, version='1.0', title='EV Charging Optimization API',
 ns = api.namespace('optimize', description='EV Charging Optimization Operations')
 
 # Input models for API documentation
-configuration_model = api.model('ConfigItem',{
-    'key': fields.String(required=True, description='The key string of the configuration item'),
-    'value': fields.String(required=True, description='A string representing the value of the configuration item.')
-})
-
 battery_config_model = api.model('BatteryConfig', {
-    'configuration': fields.List(fields.Nested(configuration_model), required=False, description='configuration of the battery behavior and control constraints'),
+    'cfg_allow_charging_from_grid': fields.Boolean(required=False, description='Controls whether the battery can be charged from the grid.'),
+    'cfg_allow_discharging_to_grid': fields.Boolean(required=False, description='Controls whether the battery can discharge to grid.'),
     's_min': fields.Float(required=True, description='Minimum state of charge (Wh)'),
     's_max': fields.Float(required=True, description='Maximum state of charge (Wh)'),
     's_initial': fields.Float(required=True, description='Initial state of charge (Wh)'),
@@ -65,7 +61,6 @@ time_series_model = api.model('TimeSeries', {
 })
 
 optimization_input_model = api.model('OptimizationInput', {
-    'configuration': fields.List(fields.Nested(configuration_model), required=False, description='general configuration of the system model and the optimization'),
     'batteries': fields.List(fields.Nested(battery_config_model), required=True, description='Battery configurations'),
     'time_series': fields.Nested(time_series_model, required=True, description='Time series data'),
     'eta_c': fields.Float(required=False, default=0.95, description='Charging efficiency'),
@@ -90,7 +85,8 @@ optimization_result_model = api.model('OptimizationResult', {
 
 @dataclass
 class BatteryConfig:
-    configuration: dict
+    cfg_allow_charging_from_grid: bool
+    cfg_allow_discharging_to_grid: bool
     s_min: float
     s_max: float
     s_initial: float
@@ -255,18 +251,16 @@ class EVChargingOptimizer:
                                      * self.variables['z_c'][i][t])
                     
             # control battery charging from grid and discharging to grid
-            if bat.configuration.get("AllowChargingFromGrid", "False") != "True":
-                print(f"no charging for {i}")
+            if not bat.cfg_allow_charging_from_grid:
                 for t in time_steps:  
                     self.problem += (self.variables['c'][i][t] <= self.M  * self.variables['y'][t])
             else:
-                print(f"charging for {i}")
-            if bat.configuration.get("AllowDischargingToGrid", "False") != "True":
-                print(f"no discharging for {i}")
+                continue
+            if not bat.cfg_allow_discharging_to_grid:
                 for t in time_steps:  
                     self.problem += (self.variables['d'][i][t] <= self.M  * (1 - self.variables['y'][t]))
             else:
-                print(f"discharging for {i}")
+                continue
 
         # Constraints (4)-(5): Grid flow direction 
         for t in time_steps:
@@ -342,28 +336,21 @@ class OptimizeCharging(Resource):
             if not data:
                 api.abort(400, "No input data provided")
             
-            #Parse model configuration
-            configuration = dict()
-            if 'configuration' in data: # configuration is optional
-                for config_item in data['configuration']:
-                    if not config_item['key'] in configuration:
-                        configuration[config_item['key']] = config_item['value']
-                    else:
-                        api.abort(400, "duplicate config item key in configuration provided")
-
             # Parse battery configurations
             batteries = []
             for bat_data in data['batteries']:
-                #Parse configuration
-                bat_config = dict()
-                if 'configuration' in bat_data: # configuration is optional
-                    for config_item in bat_data['configuration']:
-                        if not config_item['key'] in bat_config:
-                            bat_config[config_item['key']] = config_item['value']
-                        else:
-                            api.abort(400, "duplicate config item key in configuration provided")
+
+                #Parse optional items
+                allow_charging_from_grid = True
+                if 'cfg_allow_charging_from_grid' in bat_data:
+                    allow_charging_from_grid = bat_data['cfg_allow_charging_from_grid']
+                allow_discharging_to_grid = True
+                if 'cfg_allow_discharging_to_grid' in bat_data:
+                    allow_discharging_to_grid = bat_data['cfg_allow_discharging_to_grid']
+                
                 batteries.append(BatteryConfig(
-                    configuration=bat_config,
+                    cfg_allow_charging_from_grid=allow_charging_from_grid,
+                    cfg_allow_discharging_to_grid=allow_discharging_to_grid,
                     s_min=bat_data['s_min'],
                     s_max=bat_data['s_max'],
                     s_initial=bat_data['s_initial'],
@@ -437,10 +424,8 @@ class ExampleData(Resource):
 
             "batteries": [
                 {
-                    "configuration":[
-                        {"key":"AllowChargingFromGrid", "value":"True"},
-                        {"key":"AllowDischargingToGrid", "value":"False"}
-                    ],
+                    "cfg_allow_charging_from_grid": True,
+                    "cfg_allow_discharging_to_grid": False,
                     "s_min": 2000,
                     "s_max": 36000,
                     "s_initial": 15000,
@@ -449,20 +434,18 @@ class ExampleData(Resource):
                     "c_min": 1380, 
                     "c_max": 3680, 
                     "d_max": 0,
-                    "p_a": 0.00012
+                    "p_a": 0.00013
                 },
                 {
-                    "configuration":[
-                        {"key":"AllowChargingFromGrid", "value":"True"},
-                        {"key":"AllowDischargingToGrid", "value":"True"}
-                    ],
+                    "cfg_allow_charging_from_grid": False,
+                    "cfg_allow_discharging_to_grid": False,
                     "s_min": 2500,
                     "s_max": 16200,
                     "s_initial": 5000,
                     "c_min": 0,
                     "c_max": 6000, 
                     "d_max": 6000, 
-                    "p_a": 0.00012
+                    "p_a": 0.00013
                 }
             ],
             "time_series": {
