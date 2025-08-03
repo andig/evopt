@@ -129,7 +129,7 @@ type OptimizationResultStatus string
 // TimeSeries defines model for TimeSeries.
 type TimeSeries struct {
 	// Dt Duration in seconds for each time step (s)
-	Dt []float32 `json:"dt"`
+	Dt []int `json:"dt"`
 
 	// Ft Forecasted energy generation (e.g., solar PV) at each time step (Wh)
 	Ft []float32 `json:"ft"`

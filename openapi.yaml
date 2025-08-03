@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: EV Charging MILP API
+  title: EV Charging Optimization API
   description: |
     Mixed Integer Linear Programming model for EV charging optimization based on the EOS (Energy Optimization System) formulation.
 
@@ -27,8 +27,7 @@ info:
     - Storage limits: smin_i ≤ si,t ≤ smax_i
   version: 1.0.0
   contact:
-    name: EV Charging Optimization API
-    email: support@example.com
+    email: info@evcc.io
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -206,7 +205,7 @@ components:
         p_a:
           type: number
           minimum: 0
-          description: Monetary value of the stored energy per Wh at end of time horizon 
+          description: Monetary value of the stored energy per Wh at end of time horizon
           example: 0.25
         s_goal:
           type: array
@@ -228,7 +227,7 @@ components:
         dt:
           type: array
           items:
-            type: number
+            type: integer
             minimum: 0
           description: Duration in seconds for each time step (s)
           example: [3600, 3600, 3600, 3600, 3600, 3600]
