@@ -228,7 +228,7 @@ class EVChargingOptimizer:
                     if bat.s_goal[t] > 0:
                         self.problem += (self.variables['s'][i][t] >= bat.s_goal[t])
 
-            # Constraint: Minimum battery charge plan (for t > 0)
+            # Constraint: Minimum battery charge demand (for t > 0)
             if bat.p_demand is not None:
                 for t in range(1, self.T):
                     if bat.p_demand[t] > 0:
