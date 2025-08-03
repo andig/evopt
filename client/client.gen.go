@@ -55,6 +55,9 @@ type BatteryConfig struct {
 	// PA Monetary value of the stored energy per Wh at end of time horizon
 	PA float32 `json:"p_a"`
 
+	// PDemand Minimum charging plan for this battery and each time step (Wh)
+	PDemand *[]float32 `json:"p_demand,omitempty"`
+
 	// SGoal Goal state of charge for this battery at each time step (Wh)
 	SGoal *[]float32 `json:"s_goal,omitempty"`
 

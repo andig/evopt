@@ -48,6 +48,7 @@ battery_config_model = api.model('BatteryConfig', {
     's_min': fields.Float(required=True, description='Minimum state of charge (Wh)'),
     's_max': fields.Float(required=True, description='Maximum state of charge (Wh)'),
     's_initial': fields.Float(required=True, description='Initial state of charge (Wh)'),
+    'p_demand': fields.List(fields.Float, required=False, description='Minimum charge demand per time step (Wh)'),
     's_goal': fields.List(fields.Float, required=False, description='Goal state of charge at each time step (Wh)'),
     'c_min': fields.Float(required=True, description='Minimum charge power (W)'),
     'c_max': fields.Float(required=True, description='Maximum charge power (W)'),
@@ -97,6 +98,7 @@ class BatteryConfig:
     c_max: float
     d_max: float
     p_a: float
+    p_demand: Optional[List[float]] = None  # Minimum charge demand (Wh)
     s_goal: Optional[List[float]] = None  # Goal state of charge (Wh)
 
 @dataclass
@@ -233,7 +235,18 @@ class EVChargingOptimizer:
                 for t in range(1, self.T):
                     if bat.s_goal[t] > 0:
                         self.problem += (self.variables['s'][i][t] >= bat.s_goal[t])
-                    
+
+            # Constraint: Minimum battery charge demand (for t > 0)
+            if bat.p_demand is not None:
+                for t in range(1, self.T):
+                    if bat.p_demand[t] > 0:
+                        # clip required charge to ax charging power if needed 
+                        # and leave some air to breathe for the optimizer
+                        p_demand = bat.p_demand[t]
+                        if p_demand >= bat.c_max * self.time_series.dt[t] / 3600. :
+                            p_demand = bat.c_max * self.time_series.dt[t] / 3600. * 0.9999
+                        self.problem += (self.variables['c'][i][t] >= p_demand)
+
             # Constraint (7): Minimum charge power limits
             if bat.c_min > 0:
                 for t in time_steps:
@@ -354,6 +367,7 @@ class OptimizeCharging(Resource):
                     s_min=bat_data['s_min'],
                     s_max=bat_data['s_max'],
                     s_initial=bat_data['s_initial'],
+                    p_demand=bat_data.get('p_demand'),
                     s_goal=bat_data.get('s_goal'),
                     c_min=bat_data['c_min'],
                     c_max=bat_data['c_max'],
@@ -373,6 +387,11 @@ class OptimizeCharging(Resource):
             # Validate time series lengths
             lengths = [len(time_series.gt), len(time_series.ft), 
                       len(time_series.p_N), len(time_series.p_E)]
+
+            # Validate p_demand if provided
+            for i, bat in enumerate(batteries):
+                if bat.p_demand is not None:
+                    lengths.append(len(bat.p_demand))
 
             # Validate s_goal if provided
             for i, bat in enumerate(batteries):
@@ -425,6 +444,7 @@ class ExampleData(Resource):
                     "s_min": 2000,
                     "s_max": 36000,
                     "s_initial": 15000,
+                    "p_demand": [0.0, 920.0, 1920.0, 920.0, 920.0, 920.0, 920.0, 920.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                     "s_goal": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30000.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                     "c_min": 1380, 
                     "c_max": 3680, 

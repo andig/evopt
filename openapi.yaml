@@ -241,6 +241,13 @@ components:
           minimum: 0
           description: Monetary value of the stored energy per Wh at end of time horizon
           example: 0.25
+        p_demand:
+          type: array
+          items:
+            type: number
+            minimum: 0
+          description: Minimum charge demand per time step (Wh)
+          example: [0, 1200, 1800, 2500, 1200, 1500]
         s_goal:
           type: array
           items:
