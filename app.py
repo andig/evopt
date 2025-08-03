@@ -90,7 +90,7 @@ class BatteryConfig:
     c_max: float
     d_max: float
     p_a: float
-    p_demand: Optional[List[float]] = None  # Minimum charge plan (Wh)
+    p_demand: Optional[List[float]] = None  # Minimum charge demand (Wh)
     s_goal: Optional[List[float]] = None  # Goal state of charge (Wh)
 
 @dataclass
