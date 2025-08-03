@@ -212,7 +212,7 @@ components:
           items:
             type: number
             minimum: 0
-          description: Minimum charging plan for this battery and each time step (Wh)
+          description: Minimum charge demand per time step (Wh)
           example: [0, 1200, 1800, 2500, 1200, 1500]
         s_goal:
           type: array
