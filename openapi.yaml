@@ -160,7 +160,7 @@ paths:
                 $ref: "#/components/schemas/OptimizationInput"
 
 components:
-  schemas:    
+  schemas:
     BatteryConfig:
       type: object
       required:
@@ -172,14 +172,14 @@ components:
         - d_max
         - p_a
       properties:
-        cfg_allow_charging_from_grid:
+        charge_from_grid:
           type: boolean
           description: |
             Controls whether the battery can be charged from the grid.
-              - True:  (default) The battery can be charged from grid at any time. The actual decision is subject
+              - True: (default) The battery can be charged from grid at any time. The actual decision is subject
                 to the optimization.
               - False: The battery cannot be charged while power is retrieved from grid
-        cfg_allow_discharging_to_grid:
+        discharge_to_grid:
           type: boolean
           description: |
             Controls whether the battery can discharge to grid.

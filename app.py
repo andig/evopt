@@ -39,8 +39,8 @@ ns = api.namespace('optimize', description='EV Charging Optimization Operations'
 
 # Input models for API documentation
 battery_config_model = api.model('BatteryConfig', {
-    'cfg_allow_charging_from_grid': fields.Boolean(required=False, description='Controls whether the battery can be charged from the grid.'),
-    'cfg_allow_discharging_to_grid': fields.Boolean(required=False, description='Controls whether the battery can discharge to grid.'),
+    'charge_from_grid': fields.Boolean(required=False, description='Controls whether the battery can be charged from the grid.'),
+    'discharge_to_grid': fields.Boolean(required=False, description='Controls whether the battery can discharge to grid.'),
     's_min': fields.Float(required=True, description='Minimum state of charge (Wh)'),
     's_max': fields.Float(required=True, description='Maximum state of charge (Wh)'),
     's_initial': fields.Float(required=True, description='Initial state of charge (Wh)'),
@@ -85,8 +85,8 @@ optimization_result_model = api.model('OptimizationResult', {
 
 @dataclass
 class BatteryConfig:
-    cfg_allow_charging_from_grid: bool
-    cfg_allow_discharging_to_grid: bool
+    charge_from_grid: bool
+    discharge_to_grid: bool
     s_min: float
     s_max: float
     s_initial: float
@@ -251,12 +251,12 @@ class EVChargingOptimizer:
                                      * self.variables['z_c'][i][t])
                     
             # control battery charging from grid and discharging to grid
-            if not bat.cfg_allow_charging_from_grid:
+            if not bat.charge_from_grid:
                 for t in time_steps:  
                     self.problem += (self.variables['c'][i][t] <= self.M  * self.variables['y'][t])
             else:
                 continue
-            if not bat.cfg_allow_discharging_to_grid:
+            if not bat.discharge_to_grid:
                 for t in time_steps:  
                     self.problem += (self.variables['d'][i][t] <= self.M  * (1 - self.variables['y'][t]))
             else:
@@ -342,15 +342,15 @@ class OptimizeCharging(Resource):
 
                 #Parse optional items
                 allow_charging_from_grid = True
-                if 'cfg_allow_charging_from_grid' in bat_data:
-                    allow_charging_from_grid = bat_data['cfg_allow_charging_from_grid']
+                if 'charge_from_grid' in bat_data:
+                    allow_charging_from_grid = bat_data['charge_from_grid']
                 allow_discharging_to_grid = True
-                if 'cfg_allow_discharging_to_grid' in bat_data:
-                    allow_discharging_to_grid = bat_data['cfg_allow_discharging_to_grid']
+                if 'discharge_to_grid' in bat_data:
+                    allow_discharging_to_grid = bat_data['discharge_to_grid']
                 
                 batteries.append(BatteryConfig(
-                    cfg_allow_charging_from_grid=allow_charging_from_grid,
-                    cfg_allow_discharging_to_grid=allow_discharging_to_grid,
+                    charge_from_grid=allow_charging_from_grid,
+                    discharge_to_grid=allow_discharging_to_grid,
                     s_min=bat_data['s_min'],
                     s_max=bat_data['s_max'],
                     s_initial=bat_data['s_initial'],
@@ -424,8 +424,8 @@ class ExampleData(Resource):
 
             "batteries": [
                 {
-                    "cfg_allow_charging_from_grid": True,
-                    "cfg_allow_discharging_to_grid": False,
+                    "charge_from_grid": True,
+                    "discharge_to_grid": False,
                     "s_min": 2000,
                     "s_max": 36000,
                     "s_initial": 15000,
@@ -437,8 +437,8 @@ class ExampleData(Resource):
                     "p_a": 0.00013
                 },
                 {
-                    "cfg_allow_charging_from_grid": False,
-                    "cfg_allow_discharging_to_grid": False,
+                    "charge_from_grid": False,
+                    "discharge_to_grid": False,
                     "s_min": 2500,
                     "s_max": 16200,
                     "s_initial": 5000,
