@@ -341,16 +341,16 @@ class OptimizeCharging(Resource):
             for bat_data in data['batteries']:
 
                 #Parse optional items
-                allow_charging_from_grid = True
+                charging_from_grid = False
                 if 'charge_from_grid' in bat_data:
-                    allow_charging_from_grid = bat_data['charge_from_grid']
-                allow_discharging_to_grid = True
+                    charging_from_grid = bat_data['charge_from_grid']
+                discharging_to_grid = False
                 if 'discharge_to_grid' in bat_data:
-                    allow_discharging_to_grid = bat_data['discharge_to_grid']
+                    discharging_to_grid = bat_data['discharge_to_grid']
                 
                 batteries.append(BatteryConfig(
-                    charge_from_grid=allow_charging_from_grid,
-                    discharge_to_grid=allow_discharging_to_grid,
+                    charge_from_grid=charging_from_grid,
+                    discharge_to_grid=discharging_to_grid,
                     s_min=bat_data['s_min'],
                     s_max=bat_data['s_max'],
                     s_initial=bat_data['s_initial'],

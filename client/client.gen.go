@@ -38,9 +38,9 @@ type BatteryConfig struct {
 	CMin float32 `json:"c_min"`
 
 	// ChargeFromGrid Controls whether the battery can be charged from the grid.
-	//   - True: (default) The battery can be charged from grid at any time. The actual decision is subject
+	//   - True: The battery can be charged from grid at any time. The actual decision is subject
 	//     to the optimization.
-	//   - False: The battery cannot be charged while power is retrieved from grid
+	//   - False: (default) The battery cannot be charged while power is retrieved from grid
 	ChargeFromGrid *bool `json:"charge_from_grid,omitempty"`
 
 	// DMax Maximum discharge power in W

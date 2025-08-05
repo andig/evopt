@@ -176,9 +176,9 @@ components:
           type: boolean
           description: |
             Controls whether the battery can be charged from the grid.
-              - True: (default) The battery can be charged from grid at any time. The actual decision is subject
+              - True: The battery can be charged from grid at any time. The actual decision is subject
                 to the optimization.
-              - False: The battery cannot be charged while power is retrieved from grid
+              - False: (default) The battery cannot be charged while power is retrieved from grid
         discharge_to_grid:
           type: boolean
           description: |
