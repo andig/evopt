@@ -184,9 +184,9 @@ func main() {
 			asciigraph.SeriesColors(lo.RepeatBy(len(socSeries), func(i int) asciigraph.AnsiColor {
 				switch i % 3 {
 				case 0:
-					return asciigraph.LightGreen
+					return asciigraph.Green
 				case 1:
-					return asciigraph.DarkGreen
+					return asciigraph.DarkOrange
 				default:
 					return asciigraph.Green
 				}
@@ -201,17 +201,17 @@ func main() {
 			asciigraph.SeriesColors(lo.RepeatBy(len(powerSeries), func(i int) asciigraph.AnsiColor {
 				switch i {
 				case 0:
-					return asciigraph.Black
+					return asciigraph.LightBlue
 				case 1:
-					return asciigraph.Green
+					return asciigraph.Blue
 				case 2:
 					return asciigraph.Yellow
 				case 3:
-					return asciigraph.LightGreen
+					return asciigraph.Green
 				case 4:
-					return asciigraph.Orange
-				case 5:
 					return asciigraph.DarkGreen
+				case 5:
+					return asciigraph.DarkOrange
 				case 6:
 					return asciigraph.DarkRed
 				default:

@@ -38,6 +38,10 @@ api = Api(app, version='1.0', title='EV Charging Optimization API',
 ns = api.namespace('optimize', description='EV Charging Optimization Operations')
 
 # Input models for API documentation
+strategy_model = api.model('OptimizationStrategy', {
+    'charging_strategy': fields.String(required=False, description='Sets a strategy for charging in situations where choices are cost neutral.')
+})
+
 battery_config_model = api.model('BatteryConfig', {
     'charge_from_grid': fields.Boolean(required=False, description='Controls whether the battery can be charged from the grid.'),
     'discharge_to_grid': fields.Boolean(required=False, description='Controls whether the battery can discharge to grid.'),
@@ -84,6 +88,10 @@ optimization_result_model = api.model('OptimizationResult', {
 })
 
 @dataclass
+class OptimizationStrategy:
+    charging_strategy: str
+
+@dataclass
 class BatteryConfig:
     charge_from_grid: bool
     discharge_to_grid: bool
@@ -106,8 +114,9 @@ class TimeSeriesData:
     p_E: List[float]  # Export prices [currency unit/Wh]
 
 class EVChargingOptimizer:
-    def __init__(self, batteries: List[BatteryConfig], time_series: TimeSeriesData, 
+    def __init__(self, strategy: OptimizationStrategy, batteries: List[BatteryConfig], time_series: TimeSeriesData, 
                  eta_c: float = 0.95, eta_d: float = 0.95, M: float = 1e6):
+        self.strategy = strategy
         self.batteries = batteries
         self.time_series = time_series
         self.eta_c = eta_c
@@ -124,6 +133,10 @@ class EVChargingOptimizer:
         
         # Time steps
         time_steps = range(self.T)
+
+        # Computing scaling parameters
+        average_export_price = np.average(self.time_series.p_E)
+        print(average_export_price)
         
         # Decision variables
         # Charging power variables [Wh]
@@ -187,6 +200,19 @@ class EVChargingOptimizer:
         # Final state of charge value [currency unit]
         for i, bat in enumerate(self.batteries):
             objective += self.variables['s'][i][-1] * bat.p_a 
+
+        # Secondary strategies to implement preferences without imact to actual cost
+        # prefer charging first, then grid export
+        if self.strategy.charging_strategy == 'charge_before_export':
+            for i, bat in enumerate(self.batteries):        
+                for t in time_steps:
+                    objective += self.variables['s'][i][t] * average_export_price * 1e-5 * (self.T - t)
+
+        #prefer charging at high solar production times to unload public grid from peaks
+        if self.strategy.charging_strategy == 'attenuate_grid_peaks':
+            for i, bat in enumerate(self.batteries):
+                for t in time_steps:
+                    objective += self.variables['c'][i][t] * self.time_series.ft[t] * average_export_price * 1e-5
         
         self.problem += objective
         
@@ -344,6 +370,17 @@ class OptimizeCharging(Resource):
             if not data:
                 api.abort(400, "No input data provided")
             
+            # parse strategy items
+            strat_data = data['strategy']
+
+            charging_strat = 'none'
+            if 'charging_strategy' in strat_data:
+                charging_strat = strat_data['charging_strategy']
+
+            strategy = OptimizationStrategy(
+                charging_strategy= charging_strat
+            )
+
             # Parse battery configurations
             batteries = []
             for bat_data in data['batteries']:
@@ -404,6 +441,7 @@ class OptimizeCharging(Resource):
         try:
             # Create and solve optimizer
             optimizer = EVChargingOptimizer(
+                strategy=strategy,
                 batteries=batteries,
                 time_series=time_series,
                 eta_c=data.get('eta_c', 0.95),
@@ -429,7 +467,9 @@ class ExampleData(Resource):
     def get(self):
         """Get example input data for testing the optimization"""
         example_data = {
-
+            "strategy":{
+                "charging_strategy": "charge_before_export"
+            },
             "batteries": [
                 {
                     "charge_from_grid": True,

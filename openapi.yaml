@@ -161,6 +161,17 @@ paths:
 
 components:
   schemas:
+    OptimizerStrategy:
+      type: object
+      properties:
+        charging_strategy:
+          type: string
+          enum: [none, charge_before_export, attenuate_grid_peaks]
+          description: |
+            Sets a strategy for charging in situations where choices are cost neutral.
+            - none (default): no strategy set 
+            - charge_before_export: charge batteries before exporting to grid
+            - attenuate_grid_peaks: charge at times with high solar yield to reduce the grid load
     BatteryConfig:
       type: object
       required:
@@ -287,6 +298,10 @@ components:
         - batteries
         - time_series
       properties:
+        strategy:
+          type: object
+          $ref: "#/components/schemas/OptimizerStrategy"
+          description: Strategy preferences
         batteries:
           type: array
           items:

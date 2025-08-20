@@ -29,6 +29,13 @@ const (
 	Undefined  OptimizationResultStatus = "Undefined"
 )
 
+// Defines values for OptimizerStrategyChargingStrategy.
+const (
+	AttenuateGridPeaks OptimizerStrategyChargingStrategy = "attenuate_grid_peaks"
+	ChargeBeforeExport OptimizerStrategyChargingStrategy = "charge_before_export"
+	None               OptimizerStrategyChargingStrategy = "none"
+)
+
 // BatteryConfig defines model for BatteryConfig.
 type BatteryConfig struct {
 	// CMax Maximum charge power in W
@@ -98,8 +105,9 @@ type OptimizationInput struct {
 	EtaC *float32 `json:"eta_c,omitempty"`
 
 	// EtaD Discharging efficiency (0 to 1)
-	EtaD       *float32   `json:"eta_d,omitempty"`
-	TimeSeries TimeSeries `json:"time_series"`
+	EtaD       *float32           `json:"eta_d,omitempty"`
+	Strategy   *OptimizerStrategy `json:"strategy,omitempty"`
+	TimeSeries TimeSeries         `json:"time_series"`
 }
 
 // OptimizationResult defines model for OptimizationResult.
@@ -140,6 +148,21 @@ type OptimizationResultFlowDirection int
 // - Undefined: Problem status is undefined
 // - Not Solved: Problem was not solved
 type OptimizationResultStatus string
+
+// OptimizerStrategy defines model for OptimizerStrategy.
+type OptimizerStrategy struct {
+	// ChargingStrategy Sets a strategy for charging in situations where choices are cost neutral.
+	// - none (default): no strategy set
+	// - charge_before_export: charge batteries before exporting to grid
+	// - attenuate_grid_peaks: charge at times with high solar yield to reduce the grid load
+	ChargingStrategy *OptimizerStrategyChargingStrategy `json:"charging_strategy,omitempty"`
+}
+
+// OptimizerStrategyChargingStrategy Sets a strategy for charging in situations where choices are cost neutral.
+// - none (default): no strategy set
+// - charge_before_export: charge batteries before exporting to grid
+// - attenuate_grid_peaks: charge at times with high solar yield to reduce the grid load
+type OptimizerStrategyChargingStrategy string
 
 // TimeSeries defines model for TimeSeries.
 type TimeSeries struct {
