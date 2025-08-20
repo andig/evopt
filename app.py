@@ -134,9 +134,8 @@ class EVChargingOptimizer:
         # Time steps
         time_steps = range(self.T)
 
-        # Computing scaling parameters
+        # Compute scaling parameters
         average_export_price = np.average(self.time_series.p_E)
-        print(average_export_price)
         
         # Decision variables
         # Charging power variables [Wh]
@@ -201,14 +200,14 @@ class EVChargingOptimizer:
         for i, bat in enumerate(self.batteries):
             objective += self.variables['s'][i][-1] * bat.p_a 
 
-        # Secondary strategies to implement preferences without imact to actual cost
+        # Secondary strategies to implement preferences without impact to actual cost
         # prefer charging first, then grid export
         if self.strategy.charging_strategy == 'charge_before_export':
             for i, bat in enumerate(self.batteries):        
                 for t in time_steps:
                     objective += self.variables['s'][i][t] * average_export_price * 1e-5 * (self.T - t)
 
-        #prefer charging at high solar production times to unload public grid from peaks
+        # prefer charging at high solar production times to unload public grid from peaks
         if self.strategy.charging_strategy == 'attenuate_grid_peaks':
             for i, bat in enumerate(self.batteries):
                 for t in time_steps:
@@ -378,7 +377,7 @@ class OptimizeCharging(Resource):
                 charging_strat = strat_data['charging_strategy']
 
             strategy = OptimizationStrategy(
-                charging_strategy= charging_strat
+                charging_strategy=charging_strat
             )
 
             # Parse battery configurations
