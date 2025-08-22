@@ -50,7 +50,6 @@ jobs:
         with:
           tags: |
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
           images: |
             ghcr.io/afrouper/evopt
 
