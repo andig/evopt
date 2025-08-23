@@ -39,15 +39,21 @@ jobs:
         run: |
           go generate ./...
 
-      - name: Resolve version
-        id: ver
+      - name: Set version from tag or manual input
+        id: meta
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "VERSION=${GITHUB_REF##*/v}" >> "$GITHUB_ENV"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" && -n "${GITHUB_REF_NAME}" ]]; then
+            VERSION="${GITHUB_REF_NAME}"
           else
-            echo "VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
+            VERSION_INPUT="${{ github.event.inputs.version }}"
+            if [[ -n "${VERSION_INPUT}" ]]; then
+              VERSION="${VERSION_INPUT}"
+            else
+              VERSION="$(git rev-parse --short HEAD)"
+            fi
           fi
 
+          VERSION="${VERSION#v}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Resolved version: ${VERSION}"
 
