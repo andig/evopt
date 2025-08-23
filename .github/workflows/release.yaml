@@ -11,15 +11,33 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: evopt
+  REGISTRY: ghcr.io
+
 jobs:
-  docker:
-    name: Build Docker Image
+  build-and-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'   # nutzt Version aus go.mod
+          cache: true
+
+      - name: Go generate
+        run: |
+          go generate ./...
 
       - name: Resolve version
         id: ver
@@ -30,41 +48,41 @@ jobs:
             echo "VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
           fi
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-
-      - name: Build
-        run: go generate ./...
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: ${VERSION}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Setup Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          tags: |
-            type=semver,pattern={{version}}
-          images: |
-            ghcr.io/afrouper/evopt
-
-      - name: Login to GHCR
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Docker metadata
+        id: docker_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.meta.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build and push multi-arch image
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+
+      - name: Output image refs
+        run: |
+          echo "Pushed image tags:"
+          echo "${{ steps.docker_meta.outputs.tags }}"
