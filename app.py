@@ -32,7 +32,8 @@ def before_request_func():
             return jsonify({"message": str(e)}), 401
 
 api = Api(app, version='1.0', title='EV Charging Optimization API', 
-          description='Mixed Integer Linear Programming model for EV charging optimization')
+          description='Mixed Integer Linear Programming model for EV charging optimization',
+          validate=True)
 
 # Namespace for the API
 ns = api.namespace('optimize', description='EV Charging Optimization Operations')
@@ -65,6 +66,7 @@ time_series_model = api.model('TimeSeries', {
 })
 
 optimization_input_model = api.model('OptimizationInput', {
+    'strategy': fields.Nested(strategy_model, required=False, description='Optimization strategy'),
     'batteries': fields.List(fields.Nested(battery_config_model), required=True, description='Battery configurations'),
     'time_series': fields.Nested(time_series_model, required=True, description='Time series data'),
     'eta_c': fields.Float(required=False, default=0.95, description='Charging efficiency'),
@@ -353,7 +355,7 @@ class EVChargingOptimizer:
 
 @ns.route('/charge-schedule')
 class OptimizeCharging(Resource):
-    @api.expect(optimization_input_model)
+    @api.expect(optimization_input_model, validate=True)
     @api.marshal_with(optimization_result_model)
     def post(self):
         """
@@ -363,18 +365,11 @@ class OptimizeCharging(Resource):
         EV charging schedules considering battery constraints, grid prices, and energy demands.
         """
         try:
-            data = request.get_json()
+            data = api.payload
             
-            # Validate input data
-            if not data:
-                api.abort(400, "No input data provided")
-            
-            # parse strategy items
-            strat_data = data['strategy']
-
-            charging_strat = 'none'
-            if 'charging_strategy' in strat_data:
-                charging_strat = strat_data['charging_strategy']
+            # Parse strategy items with default values
+            strat_data = data.get('strategy', {})
+            charging_strat = strat_data.get('charging_strategy', 'none')
 
             strategy = OptimizationStrategy(
                 charging_strategy=charging_strat
@@ -383,18 +378,9 @@ class OptimizeCharging(Resource):
             # Parse battery configurations
             batteries = []
             for bat_data in data['batteries']:
-
-                #Parse optional items
-                charging_from_grid = False
-                if 'charge_from_grid' in bat_data:
-                    charging_from_grid = bat_data['charge_from_grid']
-                discharging_to_grid = False
-                if 'discharge_to_grid' in bat_data:
-                    discharging_to_grid = bat_data['discharge_to_grid']
-                
                 batteries.append(BatteryConfig(
-                    charge_from_grid=charging_from_grid,
-                    discharge_to_grid=discharging_to_grid,
+                    charge_from_grid=bat_data.get('charge_from_grid', False),
+                    discharge_to_grid=bat_data.get('discharge_to_grid', False),
                     s_min=bat_data['s_min'],
                     s_max=bat_data['s_max'],
                     s_initial=bat_data['s_initial'],
@@ -420,21 +406,19 @@ class OptimizeCharging(Resource):
                       len(time_series.p_N), len(time_series.p_E)]
 
             # Validate p_demand if provided
-            for i, bat in enumerate(batteries):
+            for bat in batteries:
                 if bat.p_demand is not None:
                     lengths.append(len(bat.p_demand))
 
             # Validate s_goal if provided
-            for i, bat in enumerate(batteries):
+            for bat in batteries:
                 if bat.s_goal is not None:
                     lengths.append(len(bat.s_goal))
 
             if len(set(lengths)) > 1:
                 api.abort(400, "All time series must have the same length")
             
-        except KeyError as e:
-            api.abort(400, f"Missing required field: {str(e)}")
-        except (TypeError, ValueError) as e:
+        except Exception as e:
             api.abort(400, f"Invalid data format: {str(e)}")
         
         try:
