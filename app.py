@@ -138,6 +138,7 @@ class EVChargingOptimizer:
 
         # Compute scaling parameters
         average_export_price = np.average(self.time_series.p_E)
+        min_import_price = np.min(self.time_series.p_N)
         
         # Decision variables
         # Charging power variables [Wh]
@@ -207,13 +208,13 @@ class EVChargingOptimizer:
         if self.strategy.charging_strategy == 'charge_before_export':
             for i, bat in enumerate(self.batteries):        
                 for t in time_steps:
-                    objective += self.variables['s'][i][t] * average_export_price * 1e-5 * (self.T - t)
+                    objective += self.variables['s'][i][t] * min_import_price * 5e-5 * (self.T - t)
 
         # prefer charging at high solar production times to unload public grid from peaks
         if self.strategy.charging_strategy == 'attenuate_grid_peaks':
             for i, bat in enumerate(self.batteries):
                 for t in time_steps:
-                    objective += self.variables['c'][i][t] * self.time_series.ft[t] * average_export_price * 1e-5
+                    objective += self.variables['c'][i][t] * self.time_series.ft[t] * min_import_price * 1e-6
         
         self.problem += objective
         
@@ -267,7 +268,7 @@ class EVChargingOptimizer:
                         # and leave some air to breathe for the optimizer
                         p_demand = bat.p_demand[t]
                         if p_demand >= bat.c_max * self.time_series.dt[t] / 3600. :
-                            p_demand = bat.c_max * self.time_series.dt[t] / 3600. * 0.9999
+                            p_demand = bat.c_max * self.time_series.dt[t] / 3600. * 0.999
                         self.problem += (self.variables['c'][i][t] >= p_demand)
                     elif bat.c_min > 0:
                         # in time steps without given charging demand, apply normal lower bound: 
