@@ -79,7 +79,7 @@ func main() {
 		headers := []string{"Hour", "Forecast", "TotalDemand", "GridImportCost", "GridExportCost"}
 
 		for i, bat := range req.Batteries {
-			if bat.SGoal != nil && lo.Sum(*bat.SGoal) > 0 {
+			if bat.SGoal != nil && lo.Sum(bat.SGoal) > 0 {
 				headers = append(headers,
 					fmt.Sprintf("Bat %d Goal", i),
 				)
@@ -98,8 +98,8 @@ func main() {
 			}
 
 			for _, bat := range req.Batteries {
-				if bat.SGoal != nil && lo.Sum(*bat.SGoal) > 0 {
-					row = append(row, str((*bat.SGoal)[t]))
+				if bat.SGoal != nil && lo.Sum(bat.SGoal) > 0 {
+					row = append(row, str((bat.SGoal)[t]))
 				}
 			}
 
@@ -114,8 +114,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if resp.StatusCode() == http.StatusInternalServerError && resp.JSON500.Message != nil {
-		log.Fatalf("Expected HTTP 200 but received %d\n%s", resp.StatusCode(), *resp.JSON500.Message)
+	if resp.StatusCode() == http.StatusInternalServerError && resp.JSON500.Message != "" {
+		log.Fatalf("Expected HTTP 200 but received %d\n%s", resp.StatusCode(), resp.JSON500.Message)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
@@ -128,8 +128,8 @@ func main() {
 		fmt.Println(string(b))
 	}
 
-	if *res.Status != "Optimal" {
-		log.Fatal("Optimization failed:", string(*res.Status))
+	if res.Status != "Optimal" {
+		log.Fatal("Optimization failed:", string(res.Status))
 	}
 
 	{
@@ -141,7 +141,7 @@ func main() {
 			"GridImport", "GridExport",
 		}
 
-		for i := range *res.Batteries {
+		for i := range res.Batteries {
 			headers = append(headers,
 				fmt.Sprintf("Bat %d Cha", i), // ChargingPower
 				fmt.Sprintf("Bat %d Dis", i), // DischargingPower
@@ -151,22 +151,22 @@ func main() {
 
 		table.Header(headers)
 
-		for t := range len(*res.FlowDirection) {
+		for t := range len(res.FlowDirection) {
 			row := []string{
 				strconv.Itoa(t + 1),
 				// str((req.TimeSeries.Ft)[t]),
-				// str((*res.FlowDirection)[t]),
-				str((*res.GridImport)[t]),
-				str((*res.GridExport)[t]),
+				// str((res.FlowDirection)[t]),
+				str((res.GridImport)[t]),
+				str((res.GridExport)[t]),
 			}
 
-			for j, b := range *res.Batteries {
+			for j, b := range res.Batteries {
 				_ = j
 				row = append(row,
-					str((*b.ChargingPower)[t]),
-					str((*b.DischargingPower)[t]),
-					str((*b.StateOfCharge)[t]),
-					// str((*b.StateOfCharge)[i]/req.Batteries[j].SMax*100),
+					str((b.ChargingPower)[t]),
+					str((b.DischargingPower)[t]),
+					str((b.StateOfCharge)[t]),
+					// str((b.StateOfCharge)[i]/req.Batteries[j].SMax*100),
 				)
 			}
 
@@ -179,23 +179,23 @@ func main() {
 	{
 		var power, soc [][]float64
 
-		power = append(power, toFloat64Slice(*res.GridImport, 1))
-		power = append(power, toFloat64Slice(*res.GridExport, 1))
+		power = append(power, toFloat64Slice(res.GridImport, 1))
+		power = append(power, toFloat64Slice(res.GridExport, 1))
 		power = append(power, toFloat64Slice(req.TimeSeries.Ft, 1))
 
 		powerSeries := []string{"Grid Import", "Grid Export", "Forecast"}
 		var socSeries []string
 
-		for i, b := range *res.Batteries {
+		for i, b := range res.Batteries {
 			powerSeries = append(powerSeries,
 				fmt.Sprintf("Bat %d Charge Power", i+1),
 				fmt.Sprintf("Bat %d Discharge Power", i+1),
 			)
 			socSeries = append(socSeries, fmt.Sprintf("Bat %d SoC", i+1))
 
-			power = append(power, toFloat64Slice(*b.ChargingPower, 1))
-			power = append(power, toFloat64Slice(*b.DischargingPower, 1))
-			soc = append(soc, toFloat64Slice(*b.StateOfCharge, req.Batteries[i].SMax/100))
+			power = append(power, toFloat64Slice(b.ChargingPower, 1))
+			power = append(power, toFloat64Slice(b.DischargingPower, 1))
+			soc = append(soc, toFloat64Slice(b.StateOfCharge, req.Batteries[i].SMax/100))
 		}
 
 		fmt.Println(asciigraph.PlotMany(soc, asciigraph.Precision(1),
