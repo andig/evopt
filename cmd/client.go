@@ -114,7 +114,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if resp.StatusCode() == http.StatusInternalServerError && resp.JSON500.Message != "" {
+	if resp.StatusCode() == http.StatusInternalServerError {
 		log.Fatalf("Expected HTTP 200 but received %d\n%s", resp.StatusCode(), resp.JSON500.Message)
 	}
 
