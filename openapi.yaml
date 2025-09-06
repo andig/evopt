@@ -39,7 +39,7 @@ servers:
     description: Production server
 
 paths:
-  /optimize/charge-schedule:
+  /optimize:
     post:
       tags:
         - optimization
@@ -144,20 +144,6 @@ paths:
                   message:
                     type: string
                     example: "EV Charging MILP API is running"
-
-  /optimize/example:
-    get:
-      tags:
-        - examples
-      summary: Get example input data
-      description: Returns example input data that can be used to test the optimization endpoint
-      responses:
-        "200":
-          description: Example data returned successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OptimizationInput"
 
 components:
   schemas:

@@ -182,8 +182,8 @@ type TimeSeries struct {
 	PN []float32 `json:"p_N"`
 }
 
-// PostOptimizeChargeScheduleJSONRequestBody defines body for PostOptimizeChargeSchedule for application/json ContentType.
-type PostOptimizeChargeScheduleJSONRequestBody = OptimizationInput
+// PostOptimizeJSONRequestBody defines body for PostOptimize for application/json ContentType.
+type PostOptimizeJSONRequestBody = OptimizationInput
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -258,20 +258,17 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// PostOptimizeChargeScheduleWithBody request with any body
-	PostOptimizeChargeScheduleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostOptimizeWithBody request with any body
+	PostOptimizeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostOptimizeChargeSchedule(ctx context.Context, body PostOptimizeChargeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetOptimizeExample request
-	GetOptimizeExample(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostOptimize(ctx context.Context, body PostOptimizeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetOptimizeHealth request
 	GetOptimizeHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) PostOptimizeChargeScheduleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostOptimizeChargeScheduleRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostOptimizeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostOptimizeRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -282,20 +279,8 @@ func (c *Client) PostOptimizeChargeScheduleWithBody(ctx context.Context, content
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostOptimizeChargeSchedule(ctx context.Context, body PostOptimizeChargeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostOptimizeChargeScheduleRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetOptimizeExample(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetOptimizeExampleRequest(c.Server)
+func (c *Client) PostOptimize(ctx context.Context, body PostOptimizeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostOptimizeRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -318,19 +303,19 @@ func (c *Client) GetOptimizeHealth(ctx context.Context, reqEditors ...RequestEdi
 	return c.Client.Do(req)
 }
 
-// NewPostOptimizeChargeScheduleRequest calls the generic PostOptimizeChargeSchedule builder with application/json body
-func NewPostOptimizeChargeScheduleRequest(server string, body PostOptimizeChargeScheduleJSONRequestBody) (*http.Request, error) {
+// NewPostOptimizeRequest calls the generic PostOptimize builder with application/json body
+func NewPostOptimizeRequest(server string, body PostOptimizeJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostOptimizeChargeScheduleRequestWithBody(server, "application/json", bodyReader)
+	return NewPostOptimizeRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostOptimizeChargeScheduleRequestWithBody generates requests for PostOptimizeChargeSchedule with any type of body
-func NewPostOptimizeChargeScheduleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostOptimizeRequestWithBody generates requests for PostOptimize with any type of body
+func NewPostOptimizeRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -338,7 +323,7 @@ func NewPostOptimizeChargeScheduleRequestWithBody(server string, contentType str
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/optimize/charge-schedule")
+	operationPath := fmt.Sprintf("/optimize")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -354,33 +339,6 @@ func NewPostOptimizeChargeScheduleRequestWithBody(server string, contentType str
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetOptimizeExampleRequest generates requests for GetOptimizeExample
-func NewGetOptimizeExampleRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/optimize/example")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -455,19 +413,16 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// PostOptimizeChargeScheduleWithBodyWithResponse request with any body
-	PostOptimizeChargeScheduleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostOptimizeChargeScheduleResponse, error)
+	// PostOptimizeWithBodyWithResponse request with any body
+	PostOptimizeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostOptimizeResponse, error)
 
-	PostOptimizeChargeScheduleWithResponse(ctx context.Context, body PostOptimizeChargeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*PostOptimizeChargeScheduleResponse, error)
-
-	// GetOptimizeExampleWithResponse request
-	GetOptimizeExampleWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOptimizeExampleResponse, error)
+	PostOptimizeWithResponse(ctx context.Context, body PostOptimizeJSONRequestBody, reqEditors ...RequestEditorFn) (*PostOptimizeResponse, error)
 
 	// GetOptimizeHealthWithResponse request
 	GetOptimizeHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOptimizeHealthResponse, error)
 }
 
-type PostOptimizeChargeScheduleResponse struct {
+type PostOptimizeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *OptimizationResult
@@ -476,7 +431,7 @@ type PostOptimizeChargeScheduleResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostOptimizeChargeScheduleResponse) Status() string {
+func (r PostOptimizeResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -484,29 +439,7 @@ func (r PostOptimizeChargeScheduleResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostOptimizeChargeScheduleResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetOptimizeExampleResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *OptimizationInput
-}
-
-// Status returns HTTPResponse.Status
-func (r GetOptimizeExampleResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetOptimizeExampleResponse) StatusCode() int {
+func (r PostOptimizeResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -538,30 +471,21 @@ func (r GetOptimizeHealthResponse) StatusCode() int {
 	return 0
 }
 
-// PostOptimizeChargeScheduleWithBodyWithResponse request with arbitrary body returning *PostOptimizeChargeScheduleResponse
-func (c *ClientWithResponses) PostOptimizeChargeScheduleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostOptimizeChargeScheduleResponse, error) {
-	rsp, err := c.PostOptimizeChargeScheduleWithBody(ctx, contentType, body, reqEditors...)
+// PostOptimizeWithBodyWithResponse request with arbitrary body returning *PostOptimizeResponse
+func (c *ClientWithResponses) PostOptimizeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostOptimizeResponse, error) {
+	rsp, err := c.PostOptimizeWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostOptimizeChargeScheduleResponse(rsp)
+	return ParsePostOptimizeResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostOptimizeChargeScheduleWithResponse(ctx context.Context, body PostOptimizeChargeScheduleJSONRequestBody, reqEditors ...RequestEditorFn) (*PostOptimizeChargeScheduleResponse, error) {
-	rsp, err := c.PostOptimizeChargeSchedule(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostOptimizeWithResponse(ctx context.Context, body PostOptimizeJSONRequestBody, reqEditors ...RequestEditorFn) (*PostOptimizeResponse, error) {
+	rsp, err := c.PostOptimize(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostOptimizeChargeScheduleResponse(rsp)
-}
-
-// GetOptimizeExampleWithResponse request returning *GetOptimizeExampleResponse
-func (c *ClientWithResponses) GetOptimizeExampleWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetOptimizeExampleResponse, error) {
-	rsp, err := c.GetOptimizeExample(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetOptimizeExampleResponse(rsp)
+	return ParsePostOptimizeResponse(rsp)
 }
 
 // GetOptimizeHealthWithResponse request returning *GetOptimizeHealthResponse
@@ -573,15 +497,15 @@ func (c *ClientWithResponses) GetOptimizeHealthWithResponse(ctx context.Context,
 	return ParseGetOptimizeHealthResponse(rsp)
 }
 
-// ParsePostOptimizeChargeScheduleResponse parses an HTTP response from a PostOptimizeChargeScheduleWithResponse call
-func ParsePostOptimizeChargeScheduleResponse(rsp *http.Response) (*PostOptimizeChargeScheduleResponse, error) {
+// ParsePostOptimizeResponse parses an HTTP response from a PostOptimizeWithResponse call
+func ParsePostOptimizeResponse(rsp *http.Response) (*PostOptimizeResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostOptimizeChargeScheduleResponse{
+	response := &PostOptimizeResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -607,32 +531,6 @@ func ParsePostOptimizeChargeScheduleResponse(rsp *http.Response) (*PostOptimizeC
 			return nil, err
 		}
 		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetOptimizeExampleResponse parses an HTTP response from a GetOptimizeExampleWithResponse call
-func ParseGetOptimizeExampleResponse(rsp *http.Response) (*GetOptimizeExampleResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetOptimizeExampleResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest OptimizationInput
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
 
 	}
 
