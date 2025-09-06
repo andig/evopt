@@ -6,6 +6,7 @@ from optimizer import Optimizer, OptimizationStrategy, BatteryConfig, TimeSeries
 
 app = Flask(__name__)
 
+
 @app.before_request
 def before_request_func():
     secret_key = os.environ.get('JWT_TOKEN_SECRET')
@@ -13,12 +14,12 @@ def before_request_func():
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return jsonify({"message": "Missing authorization header"}), 401
-        
+
         try:
             token_type, token = auth_header.split(' ')
             if token_type.lower() != 'bearer':
                 return jsonify({"message": "Invalid token type"}), 401
-            
+
             jwt.decode(token, secret_key, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
             return jsonify({"message": "Token has expired"}), 401
@@ -27,7 +28,8 @@ def before_request_func():
         except Exception as e:
             return jsonify({"message": str(e)}), 401
 
-api = Api(app, version='1.0', title='EV Charging Optimization API', 
+
+api = Api(app, version='1.0', title='EV Charging Optimization API',
           description='Mixed Integer Linear Programming model for EV charging optimization',
           validate=True)
 
@@ -86,7 +88,6 @@ optimization_result_model = api.model('OptimizationResult', {
 })
 
 
-
 @ns.route('/charge-schedule')
 class OptimizeCharging(Resource):
     @api.expect(optimization_input_model, validate=True)
@@ -94,13 +95,13 @@ class OptimizeCharging(Resource):
     def post(self):
         """
         Optimize EV charging schedule using MILP
-        
+
         This endpoint solves a Mixed Integer Linear Programming problem to optimize
         EV charging schedules considering battery constraints, grid prices, and energy demands.
         """
         try:
             data = api.payload
-            
+
             # Parse strategy items with default values
             strat_data = data.get('strategy', {})
             charging_strat = strat_data.get('charging_strategy', 'none')
@@ -125,7 +126,7 @@ class OptimizeCharging(Resource):
                     d_max=bat_data['d_max'],
                     p_a=bat_data['p_a'],
                 ))
-            
+
             # Parse time series data
             time_series = TimeSeriesData(
                 dt=data['time_series']['dt'],
@@ -136,8 +137,8 @@ class OptimizeCharging(Resource):
             )
 
             # Validate time series lengths
-            lengths = [len(time_series.gt), len(time_series.ft), 
-                      len(time_series.p_N), len(time_series.p_E)]
+            lengths = [len(time_series.gt), len(time_series.ft),
+                       len(time_series.p_N), len(time_series.p_E)]
 
             # Validate p_demand if provided
             for bat in batteries:
@@ -151,10 +152,10 @@ class OptimizeCharging(Resource):
 
             if len(set(lengths)) > 1:
                 api.abort(400, "All time series must have the same length")
-            
+
         except Exception as e:
             api.abort(400, f"Invalid data format: {str(e)}")
-        
+
         try:
             # Create and solve optimizer
             optimizer = Optimizer(
@@ -165,12 +166,13 @@ class OptimizeCharging(Resource):
                 eta_d=data.get('eta_d', 0.95),
                 M=1e6
             )
-            
+
             result = optimizer.solve()
             return result
-            
+
         except Exception as e:
             api.abort(500, f"Optimization failed: {str(e)}")
+
 
 @ns.route('/health')
 class Health(Resource):
