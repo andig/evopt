@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_restx import Api, Resource, fields
 import os
 import jwt
-from evccoptimizer import EvccOptimizer, OptimizationStrategy, BatteryConfig, TimeSeriesData
+from optimizer import Optimizer, OptimizationStrategy, BatteryConfig, TimeSeriesData
 
 app = Flask(__name__)
 
@@ -157,7 +157,7 @@ class OptimizeCharging(Resource):
         
         try:
             # Create and solve optimizer
-            optimizer = EvccOptimizer(
+            optimizer = Optimizer(
                 strategy=strategy,
                 batteries=batteries,
                 time_series=time_series,

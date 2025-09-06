@@ -34,7 +34,7 @@ class TimeSeriesData:
 Optimizer class building the MILP model from the input data, and provides 
 solve() function to run optimization and return the results
 """
-class EvccOptimizer:
+class Optimizer:
     """
     Constructor
     """
