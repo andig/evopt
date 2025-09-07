@@ -35,8 +35,7 @@ api = Api(app, version='1.0', title='EV Charging Optimization API',
           validate=True)
 
 # Namespace for the API
-ns = api.namespace(
-    'optimize', description='EV Charging Optimization Operations')
+ns = api.namespace('optimize', description='EV Charging Optimization Operations')
 
 # Input models for API documentation
 strategy_model = api.model('OptimizationStrategy', {
