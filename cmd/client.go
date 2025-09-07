@@ -46,26 +46,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if *jsonData == "" {
+		log.Fatal("missing json request")
+	}
+
 	var req client.OptimizationInput
-	if *jsonData != "" {
-		if err := json.Unmarshal([]byte(*jsonData), &req); err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		example, err := c.GetOptimizeExampleWithResponse(context.TODO())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if example.StatusCode() != http.StatusOK {
-			log.Fatalf("Expected HTTP 200 but received %d\n%s", example.StatusCode(), string(example.Body))
-		}
-
-		req := *example.JSON200
-		if *vFlag {
-			b, _ := json.MarshalIndent(req, "", "  ")
-			fmt.Println(string(b))
-		}
+	if err := json.Unmarshal([]byte(*jsonData), &req); err != nil {
+		log.Fatal(err)
 	}
 
 	tw := tablewriter.WithConfig(tablewriter.Config{
@@ -109,7 +96,7 @@ func main() {
 		table.Render()
 	}
 
-	resp, err := c.PostOptimizeChargeScheduleWithResponse(context.TODO(), req)
+	resp, err := c.PostOptimizeWithResponse(context.TODO(), req)
 	if err != nil {
 		log.Fatal(err)
 	}
