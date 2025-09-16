@@ -124,6 +124,14 @@ class Optimizer:
             else:
                 self.variables['z_c'][i] = None
 
+        # Binary variable to lock chrging against discharging
+        self.variables['z_cd'] = {}
+        for i, bat in enumerate(self.batteries):
+            self.variables['z_cd'][i] = [
+                pulp.LpVariable(f"z_cd_{i}_{t}", cat='Binary')
+                for t in self.time_steps
+            ]
+
     def _setup_target_function(self):
         """
         Gather all target function contributions and instantiate the objective
@@ -153,7 +161,7 @@ class Optimizer:
         if self.strategy.charging_strategy == 'charge_before_export':
             for i, bat in enumerate(self.batteries):
                 for t in self.time_steps:
-                    objective += self.variables['c'][i][t] * min_import_price * 5e-5 * (self.T - t)
+                    objective += self.variables['c'][i][t] * min_import_price * 1e-6 * (self.T - t)
 
         # prefer charging at high solar production times to unload public grid from peaks
         if self.strategy.charging_strategy == 'attenuate_grid_peaks':
@@ -231,17 +239,22 @@ class Optimizer:
                                          * self.variables['z_c'][i][t])
                         self.problem += (self.variables['c'][i][t] <= self.M * self.variables['z_c'][i][t])
 
-            # control battery charging from grid and discharging to grid
+            # control battery charging from grid 
             if not bat.charge_from_grid:
                 for t in self.time_steps:
                     self.problem += (self.variables['c'][i][t] <= self.M * self.variables['y'][t])
-            else:
-                continue
+
+            # control battery discharging to grid
             if not bat.discharge_to_grid:
                 for t in self.time_steps:
                     self.problem += (self.variables['d'][i][t] <= self.M * (1 - self.variables['y'][t]))
-            else:
-                continue
+
+            # lock charging against discharging
+            for t in self.time_steps:
+                # Discharge constraint
+                self.problem += self.variables['d'][i][t] <= self.M * self.variables['z_cd'][i][t]
+                # Charge constraint
+                self.problem += self.variables['c'][i][t] <= self.M * (1 - self.variables['z_cd'][i][t])            
 
         # Constraints (4)-(5): Grid flow direction
         for t in self.time_steps:
