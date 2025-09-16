@@ -48,7 +48,7 @@ type BatteryConfig struct {
 	//   - True: The battery can be charged from grid at any time. The actual decision is subject
 	//     to the optimization.
 	//   - False: (default) The battery cannot be charged while power is retrieved from grid
-	ChargeFromGrid *bool `json:"charge_from_grid,omitempty"`
+	ChargeFromGrid bool `json:"charge_from_grid,omitempty"`
 
 	// DMax Maximum discharge power in W
 	DMax float32 `json:"d_max"`
@@ -57,16 +57,16 @@ type BatteryConfig struct {
 	//   - True: The battery can discharge to the grid at any time. The actual decision is
 	//     subject to the optimization.
 	//   - False: (default) The battery cannot be discharged while power is exported to the grid.
-	DischargeToGrid *bool `json:"discharge_to_grid,omitempty"`
+	DischargeToGrid bool `json:"discharge_to_grid,omitempty"`
 
 	// PA Monetary value of the stored energy per Wh at end of time horizon
 	PA float32 `json:"p_a"`
 
 	// PDemand Minimum charge demand per time step (Wh)
-	PDemand *[]float32 `json:"p_demand,omitempty"`
+	PDemand []float32 `json:"p_demand,omitempty"`
 
 	// SGoal Goal state of charge for this battery at each time step (Wh)
-	SGoal *[]float32 `json:"s_goal,omitempty"`
+	SGoal []float32 `json:"s_goal,omitempty"`
 
 	// SInitial Initial state of charge in Wh
 	SInitial float32 `json:"s_initial"`
@@ -81,19 +81,19 @@ type BatteryConfig struct {
 // BatteryResult defines model for BatteryResult.
 type BatteryResult struct {
 	// ChargingPower Optimal charging energy at each time step (Wh)
-	ChargingPower *[]float32 `json:"charging_power,omitempty"`
+	ChargingPower []float32 `json:"charging_power,omitempty"`
 
 	// DischargingPower Optimal discharging energy at each time step (Wh)
-	DischargingPower *[]float32 `json:"discharging_power,omitempty"`
+	DischargingPower []float32 `json:"discharging_power,omitempty"`
 
 	// StateOfCharge State of charge at each time step (Wh)
-	StateOfCharge *[]float32 `json:"state_of_charge,omitempty"`
+	StateOfCharge []float32 `json:"state_of_charge,omitempty"`
 }
 
 // Error defines model for Error.
 type Error struct {
 	// Message Error message describing what went wrong
-	Message *string `json:"message,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 // OptimizationInput defines model for OptimizationInput.
@@ -102,32 +102,32 @@ type OptimizationInput struct {
 	Batteries []BatteryConfig `json:"batteries"`
 
 	// EtaC Charging efficiency (0 to 1)
-	EtaC *float32 `json:"eta_c,omitempty"`
+	EtaC float32 `json:"eta_c,omitempty"`
 
 	// EtaD Discharging efficiency (0 to 1)
-	EtaD       *float32           `json:"eta_d,omitempty"`
-	Strategy   *OptimizerStrategy `json:"strategy,omitempty"`
-	TimeSeries TimeSeries         `json:"time_series"`
+	EtaD       float32           `json:"eta_d,omitempty"`
+	Strategy   OptimizerStrategy `json:"strategy,omitempty"`
+	TimeSeries TimeSeries        `json:"time_series"`
 }
 
 // OptimizationResult defines model for OptimizationResult.
 type OptimizationResult struct {
 	// Batteries Optimization results for each battery
-	Batteries *[]BatteryResult `json:"batteries,omitempty"`
+	Batteries []BatteryResult `json:"batteries,omitempty"`
 
 	// FlowDirection Binary flow direction at each time step:
 	// - 0: Import from grid
 	// - 1: Export to grid
-	FlowDirection *[]OptimizationResultFlowDirection `json:"flow_direction,omitempty"`
+	FlowDirection []OptimizationResultFlowDirection `json:"flow_direction,omitempty"`
 
 	// GridExport Energy exported to grid at each time step (Wh)
-	GridExport *[]float32 `json:"grid_export,omitempty"`
+	GridExport []float32 `json:"grid_export,omitempty"`
 
 	// GridImport Energy imported from grid at each time step (Wh)
-	GridImport *[]float32 `json:"grid_import,omitempty"`
+	GridImport []float32 `json:"grid_import,omitempty"`
 
 	// ObjectiveValue Optimal objective function value (economic benefit in currency units). Null if not optimal.
-	ObjectiveValue *float32 `json:"objective_value"`
+	ObjectiveValue float32 `json:"objective_value"`
 
 	// Status Optimization solver status:
 	// - Optimal: Problem solved to optimality
@@ -135,7 +135,7 @@ type OptimizationResult struct {
 	// - Unbounded: Objective function is unbounded
 	// - Undefined: Problem status is undefined
 	// - Not Solved: Problem was not solved
-	Status *OptimizationResultStatus `json:"status,omitempty"`
+	Status OptimizationResultStatus `json:"status,omitempty"`
 }
 
 // OptimizationResultFlowDirection defines model for OptimizationResult.FlowDirection.
@@ -155,7 +155,7 @@ type OptimizerStrategy struct {
 	// - none (default): no strategy set
 	// - charge_before_export: charge batteries before exporting to grid
 	// - attenuate_grid_peaks: charge at times with high solar yield to reduce the grid load
-	ChargingStrategy *OptimizerStrategyChargingStrategy `json:"charging_strategy,omitempty"`
+	ChargingStrategy OptimizerStrategyChargingStrategy `json:"charging_strategy,omitempty"`
 }
 
 // OptimizerStrategyChargingStrategy Sets a strategy for charging in situations where choices are cost neutral.
@@ -517,8 +517,8 @@ type GetOptimizeHealthResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
-		Message *string `json:"message,omitempty"`
-		Status  *string `json:"status,omitempty"`
+		Message string `json:"message,omitempty"`
+		Status  string `json:"status,omitempty"`
 	}
 }
 
@@ -655,8 +655,8 @@ func ParseGetOptimizeHealthResponse(rsp *http.Response) (*GetOptimizeHealthRespo
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest struct {
-			Message *string `json:"message,omitempty"`
-			Status  *string `json:"status,omitempty"`
+			Message string `json:"message,omitempty"`
+			Status  string `json:"status,omitempty"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
