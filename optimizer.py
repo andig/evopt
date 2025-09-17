@@ -124,7 +124,7 @@ class Optimizer:
             else:
                 self.variables['z_c'][i] = None
 
-        # Binary variable to lock chrging against discharging
+        # Binary variable to lock charging against discharging
         self.variables['z_cd'] = {}
         for i, bat in enumerate(self.batteries):
             self.variables['z_cd'][i] = [
