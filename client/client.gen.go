@@ -31,9 +31,15 @@ const (
 
 // Defines values for OptimizerStrategyChargingStrategy.
 const (
-	AttenuateGridPeaks OptimizerStrategyChargingStrategy = "attenuate_grid_peaks"
-	ChargeBeforeExport OptimizerStrategyChargingStrategy = "charge_before_export"
-	None               OptimizerStrategyChargingStrategy = "none"
+	OptimizerStrategyChargingStrategyAttenuateGridPeaks OptimizerStrategyChargingStrategy = "attenuate_grid_peaks"
+	OptimizerStrategyChargingStrategyChargeBeforeExport OptimizerStrategyChargingStrategy = "charge_before_export"
+	OptimizerStrategyChargingStrategyNone               OptimizerStrategyChargingStrategy = "none"
+)
+
+// Defines values for OptimizerStrategyDischargingStrategy.
+const (
+	OptimizerStrategyDischargingStrategyDischargeBeforeImport OptimizerStrategyDischargingStrategy = "discharge_before_import"
+	OptimizerStrategyDischargingStrategyNone                  OptimizerStrategyDischargingStrategy = "none"
 )
 
 // BatteryConfig defines model for BatteryConfig.
@@ -156,6 +162,11 @@ type OptimizerStrategy struct {
 	// - charge_before_export: charge batteries before exporting to grid
 	// - attenuate_grid_peaks: charge at times with high solar yield to reduce the grid load
 	ChargingStrategy OptimizerStrategyChargingStrategy `json:"charging_strategy,omitempty"`
+
+	// DischargingStrategy Sets a strategy for charging in situations where choices are cost neutral.
+	// - none (default): no strategy set
+	// - discharge_before_import: discharge batteries before importing from grid
+	DischargingStrategy OptimizerStrategyDischargingStrategy `json:"discharging_strategy,omitempty"`
 }
 
 // OptimizerStrategyChargingStrategy Sets a strategy for charging in situations where choices are cost neutral.
@@ -163,6 +174,11 @@ type OptimizerStrategy struct {
 // - charge_before_export: charge batteries before exporting to grid
 // - attenuate_grid_peaks: charge at times with high solar yield to reduce the grid load
 type OptimizerStrategyChargingStrategy string
+
+// OptimizerStrategyDischargingStrategy Sets a strategy for charging in situations where choices are cost neutral.
+// - none (default): no strategy set
+// - discharge_before_import: discharge batteries before importing from grid
+type OptimizerStrategyDischargingStrategy string
 
 // TimeSeries defines model for TimeSeries.
 type TimeSeries struct {
