@@ -158,6 +158,13 @@ components:
             - none (default): no strategy set 
             - charge_before_export: charge batteries before exporting to grid
             - attenuate_grid_peaks: charge at times with high solar yield to reduce the grid load
+        discharging_strategy:
+          type: string
+          enum: [none, discharge_before_import]
+          description: |
+            Sets a strategy for charging in situations where choices are cost neutral.
+            - none (default): no strategy set 
+            - discharge_before_import: discharge batteries before importing from grid
     BatteryConfig:
       type: object
       required:

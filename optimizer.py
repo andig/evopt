@@ -7,6 +7,7 @@ from dataclasses import dataclass
 @dataclass
 class OptimizationStrategy:
     charging_strategy: str
+    discharging_strategy: str
 
 
 @dataclass
@@ -167,6 +168,13 @@ class Optimizer:
             for i, bat in enumerate(self.batteries):
                 for t in self.time_steps:
                     objective += self.variables['c'][i][t] * self.time_series.ft[t] * min_import_price * 1e-6
+
+        # prefer discharging batteries completely before importing from grid
+        if self.strategy.discharging_strategy == 'discharge_before_import':
+            print("strat")
+            for i, bat in enumerate(self.batteries):
+                for t in self.time_steps:
+                    objective += self.variables['d'][i][t] * min_import_price * 5e-6 * (self.T - t)
 
         self.problem += objective
 

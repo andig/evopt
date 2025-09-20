@@ -39,7 +39,8 @@ ns = api.namespace('optimize', description='EV Charging Optimization Operations'
 
 # Input models for API documentation
 strategy_model = api.model('OptimizationStrategy', {
-    'charging_strategy': fields.String(required=False, description='Sets a strategy for charging in situations where choices are cost neutral.')
+    'charging_strategy': fields.String(required=False, description='Sets a strategy for charging in situations where choices are cost neutral.'),
+    'discharging_strategy': fields.String(required=False, description='Sets a strategy for discharging in situations where choices are cost neutral.')
 })
 
 battery_config_model = api.model('BatteryConfig', {
@@ -106,9 +107,11 @@ class OptimizeCharging(Resource):
             # Parse strategy items with default values
             strat_data = data.get('strategy', {})
             charging_strat = strat_data.get('charging_strategy', 'none')
+            discharging_strat = strat_data.get('discharging_strategy', 'none')
 
             strategy = OptimizationStrategy(
-                charging_strategy=charging_strat
+                charging_strategy=charging_strat,
+                discharging_strategy=discharging_strat
             )
 
             # Parse battery configurations
