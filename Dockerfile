@@ -1,24 +1,27 @@
-FROM python:3.13-slim
+# Install uv
+FROM python:3.13-slim AS builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# Change the working directory to the `app` directory
 WORKDIR /app
 
-# Install system dependencies including CBC solver for PuLP
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    coinor-cbc \
-    htop \
-    && rm -rf /var/lib/apt/lists/*
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project --no-editable
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --upgrade --no-cache-dir -r requirements.txt
+# Copy the project into the intermediate image
+ADD . /app
 
-# Copy application code
-COPY *.py .
+# Sync the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-editable
 
-# Expose the port
-EXPOSE 7050
+FROM python:3.13-slim
+
+# Copy the environment, but not the source code
+COPY --from=builder --chown=app:app /app/.venv /app/.venv
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:7050", "--workers", "4", "--max-requests", "32", "app:app"]
+CMD ["/app/.venv/bin/gunicorn", "--bind", "0.0.0.0:7050", "--workers", "4", "--max-requests", "32", "evopt.app:app"]

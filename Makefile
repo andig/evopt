@@ -5,25 +5,32 @@ default: build docker-build
 build::
 	go generate ./...
 
-test::
-	go run example/client.go
-
 install::
-	python3 -m venv .venv && source .venv/bin/activate && pip install --upgrade -r requirements.txt
+	uv sync
 
 upgrade::
-	python3 -m venv .venv && source .venv/bin/activate && pip install --upgrade $$(pip list --outdated | awk 'NR>2 {print $$1}')
+	uv lock --upgrade
+
+lint::
+	uv run ruff format
+	uv run ruff check --fix
+
+test::
+	uv run pytest
 
 run::
-	source .venv/bin/activate && python3 app.py
+	uv run python -m evopt.app
 
-docker: docker-build docker-run
+docker: docker-build docker-push docker-run
 
 docker-build::
-	docker buildx build . --tag $(DOCKER_IMAGE) --push
+	docker buildx build . --tag $(DOCKER_IMAGE)
 
 docker-run::
 	docker run -p 7050:7050 -it $(DOCKER_IMAGE)
+
+docker-push::
+	docker push $(DOCKER_IMAGE)
 
 fly::
 	fly deploy --local-only

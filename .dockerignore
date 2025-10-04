@@ -1,9 +1,11 @@
-# flyctl launch added from .gitignore
-**/.claude
-**/.vscode
-**/.git
+# Ignore all files
+*
 
-# flyctl launch added from .venv/.gitignore
-# Created by venv; see https://docs.python.org/3/library/venv.html
-.venv/**/*
-fly.toml
+# Except what we really need
+!uv.lock
+!pyproject.toml
+!README.md
+!src/
+
+# Exclude files in the included directories that we don't want
+__pycache__
