@@ -14,6 +14,13 @@ import (
 	"strings"
 )
 
+// Defines values for LoadConfigLoadType.
+const (
+	Buffered    LoadConfigLoadType = "buffered"
+	Profiled    LoadConfigLoadType = "profiled"
+	ValueDriven LoadConfigLoadType = "value_driven"
+)
+
 // Defines values for OptimizationResultFlowDirection.
 const (
 	N0 OptimizationResultFlowDirection = 0
@@ -102,6 +109,73 @@ type Error struct {
 	Message string `json:"message,omitempty"`
 }
 
+// LoadConfig defines model for LoadConfig.
+type LoadConfig struct {
+	// LoadType Defines the fundamental model of the load:
+	// - profiled: The load is determined by a load profile (average power per time step) for a sequience
+	//     of time steps. The profile may be shorter of equal to the length of the model's time horizon.
+	//     In this case, the optimizer will determin the best time to start at or after t_start. However,
+	//     the placement will be such that the profile will be completed at or before the end of the
+	//     model's time horizon.
+	//     Typical use cases: constant loads like bitcoin miners, loads with a defined profile like wahsing machines.
+	// - buffered: The load is flexible over time, typically feeding a thermal buffer like a hot water tank or a
+	//     heating system. The load is defined by an energy amount in Wh to be delivered within the model's time horizon.
+	//     Along with that, a buffer size in Wh can be specified to to provide a sufficient distribution of the load drawn
+	//     over time. This constraint will make sure that the integral of the optimized load profile will never deviate
+	//     from the average load by more than 1/2 of the buffer size in either direction.
+	// - value_driven: The load can be fully controlled by the optimization within p_min and p_max, using its
+	//     indicated value per Wh.
+	LoadType LoadConfigLoadType `json:"load_type"`
+
+	// PDemand Given power profile of the load in W across a sequence of time steps. If the load
+	// profile has less time steps than the model horizon, the profile will be started at
+	// the optimal point in time. If there are multiple times that lead to the same result,
+	// the load profile is started as early as possible.
+	// Required for the type 'profiled'.
+	// Ignored for 'buffered' and 'value_driven'.
+	PDemand []float32 `json:"p_demand,omitempty"`
+
+	// PMax Maximum power of the load in W. It is assumed that over a time step duration,
+	// the power can be varied between p_min and p_max, either by actual derating ability
+	// via repeated on-off-switching (pwm).
+	// Required for the types 'buffered' and 'value_driven'.
+	// Ignored for 'profiled'.
+	PMax float32 `json:"p_max,omitempty"`
+
+	// PMin Minimum power of the load in W. It is assumed that over a time step duration,
+	// the power can be varied between p_min and p_max, either by actual derating ability
+	// via repeated on-off-switching (pwm). Defaults to 0W.
+	// Optional for the types 'buffered' and 'value_driven'.
+	// Ignored for 'profiled'.
+	PMin float32 `json:"p_min,omitempty"`
+
+	// Prc Value created by the load per Wh of delivered energy. The load will be determined within
+	// its power limits compared to other economic options (grid import and export, charging and discharging).
+	// E.g. a price between the grid export remuneration and the grid import price will let the
+	// load get active as soon as there is solar excess power available that otherwise would be
+	// exported to the grid.
+	Prc float32 `json:"prc,omitempty"`
+
+	// TStart Time series index of the earliest start time of the given load profile.
+	TStart float32 `json:"t_start,omitempty"`
+}
+
+// LoadConfigLoadType Defines the fundamental model of the load:
+//   - profiled: The load is determined by a load profile (average power per time step) for a sequience
+//     of time steps. The profile may be shorter of equal to the length of the model's time horizon.
+//     In this case, the optimizer will determin the best time to start at or after t_start. However,
+//     the placement will be such that the profile will be completed at or before the end of the
+//     model's time horizon.
+//     Typical use cases: constant loads like bitcoin miners, loads with a defined profile like wahsing machines.
+//   - buffered: The load is flexible over time, typically feeding a thermal buffer like a hot water tank or a
+//     heating system. The load is defined by an energy amount in Wh to be delivered within the model's time horizon.
+//     Along with that, a buffer size in Wh can be specified to to provide a sufficient distribution of the load drawn
+//     over time. This constraint will make sure that the integral of the optimized load profile will never deviate
+//     from the average load by more than 1/2 of the buffer size in either direction.
+//   - value_driven: The load can be fully controlled by the optimization within p_min and p_max, using its
+//     indicated value per Wh.
+type LoadConfigLoadType string
+
 // OptimizationInput defines model for OptimizationInput.
 type OptimizationInput struct {
 	// Batteries Configuration for all batteries in the system
@@ -112,6 +186,7 @@ type OptimizationInput struct {
 
 	// EtaD Discharging efficiency (0 to 1)
 	EtaD       float32           `json:"eta_d,omitempty"`
+	Loads      []LoadConfig      `json:"loads,omitempty"`
 	Strategy   OptimizerStrategy `json:"strategy,omitempty"`
 	TimeSeries TimeSeries        `json:"time_series"`
 }
