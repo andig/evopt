@@ -102,6 +102,19 @@ type Error struct {
 	Message string `json:"message,omitempty"`
 }
 
+// GridConfig defines model for GridConfig.
+type GridConfig struct {
+	// PMaxExp Maximum grid export power in W
+	PMaxExp float32 `json:"p_max_exp,omitempty"`
+
+	// PMaxImp Maximum grid import power in W
+	PMaxImp float32 `json:"p_max_imp,omitempty"`
+
+	// PrcPImpExc price per W to consider in case the import limit is exceeded.
+	// If not specified, the limit will be protected by a hard constraint.
+	PrcPImpExc float32 `json:"prc_p_imp_exc,omitempty"`
+}
+
 // OptimizationInput defines model for OptimizationInput.
 type OptimizationInput struct {
 	// Batteries Configuration for all batteries in the system
@@ -112,6 +125,7 @@ type OptimizationInput struct {
 
 	// EtaD Discharging efficiency (0 to 1)
 	EtaD       float32           `json:"eta_d,omitempty"`
+	Grid       GridConfig        `json:"grid,omitempty"`
 	Strategy   OptimizerStrategy `json:"strategy,omitempty"`
 	TimeSeries TimeSeries        `json:"time_series"`
 }

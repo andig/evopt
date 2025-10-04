@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_restx import Api, Resource, fields
 import os
 import jwt
-from optimizer import Optimizer, OptimizationStrategy, BatteryConfig, TimeSeriesData
+from optimizer import Optimizer, OptimizationStrategy, GridConfig, BatteryConfig, TimeSeriesData
 
 app = Flask(__name__)
 
@@ -106,12 +106,17 @@ class OptimizeCharging(Resource):
 
             # Parse strategy items with default values
             strat_data = data.get('strategy', {})
-            charging_strat = strat_data.get('charging_strategy', 'none')
-            discharging_strat = strat_data.get('discharging_strategy', 'none')
-
             strategy = OptimizationStrategy(
-                charging_strategy=charging_strat,
-                discharging_strategy=discharging_strat
+                charging_strategy=strat_data.get('charging_strategy', 'none'),
+                discharging_strategy=strat_data.get('discharging_strategy', 'none')
+            )
+
+            # parse grid configuration
+            grid_data = data.get('grid', {})
+            grid = GridConfig(
+                p_max_imp = grid_data.get('p_max_imp', None),
+                p_max_exp = grid_data.get('p_max_exp', None),
+                prc_p_exc_imp = grid_data.get('prc_p_exc_imp', None)
             )
 
             # Parse battery configurations
@@ -164,6 +169,7 @@ class OptimizeCharging(Resource):
             # Create and solve optimizer
             optimizer = Optimizer(
                 strategy=strategy,
+                grid=grid,
                 batteries=batteries,
                 time_series=time_series,
                 eta_c=data.get('eta_c', 0.95),

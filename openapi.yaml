@@ -165,6 +165,23 @@ components:
             Sets a strategy for charging in situations where choices are cost neutral.
             - none (default): no strategy set 
             - discharge_before_import: discharge batteries before importing from grid
+    GridConfig:
+      type: object
+      properties:
+        p_max_imp:
+          type: number
+          minimum: 0
+          description: Maximum grid import power in W
+        p_max_exp:
+          type: number
+          minimum: 0
+          description: Maximum grid export power in W
+        prc_p_imp_exc:
+          type: number
+          minimum: 0
+          description: |
+            price per W to consider in case the import limit is exceeded. 
+            If not specified, the limit will be protected by a hard constraint.
     BatteryConfig:
       type: object
       required:
@@ -295,6 +312,10 @@ components:
           type: object
           $ref: "#/components/schemas/OptimizerStrategy"
           description: Strategy preferences
+        grid: 
+          type: object
+          $ref: "#/components/schemas/GridConfig"
+          description: Grid configuration 
         batteries:
           type: array
           items:

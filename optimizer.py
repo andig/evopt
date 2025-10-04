@@ -9,6 +9,11 @@ class OptimizationStrategy:
     charging_strategy: str
     discharging_strategy: str
 
+@dataclass
+class GridConfig:
+    p_max_imp: float
+    p_max_exp: float
+    prc_p_exc_imp: float
 
 @dataclass
 class BatteryConfig:
@@ -40,13 +45,13 @@ class Optimizer:
     solve() function to run optimization and return the results
     """
 
-    def __init__(self, strategy: OptimizationStrategy, batteries: List[BatteryConfig], time_series: TimeSeriesData,
+    def __init__(self, strategy: OptimizationStrategy, grid: GridConfig, batteries: List[BatteryConfig], time_series: TimeSeriesData,
                  eta_c: float = 0.95, eta_d: float = 0.95, M: float = 1e6):
         """
         Constructor
         """
-
         self.strategy = strategy
+        self.grid = grid
         self.batteries = batteries
         self.time_series = time_series
         self.eta_c = eta_c
@@ -60,12 +65,17 @@ class Optimizer:
         self.problem = None
         # dictionary of optimizer variables
         self.variables = {}
+
         # Compute scaling parameters
         self.min_import_price = np.min(self.time_series.p_N)
         self.max_import_price = np.max(self.time_series.p_N)
         # make sure goal_penalty is always positive
         self.goal_penalty_energy = np.min([self.max_import_price, 0.1e-3]) * 10e1
         self.goal_penalty_power = np.min([self.max_import_price, 0.1e-3]) * np.max(self.time_series.dt) / 3600 * 10e1
+        self.grid_p_imp_pen = np.min([self.max_import_price, 0.1e-3]) * np.max(self.time_series.dt) / 3600 * 10e1
+        if self.grid.prc_p_exc_imp is not None:
+            self.grid_p_imp_pen = self.grid.prc_p_exc_imp
+        self.grid_p_exp_pen =  np.min([self.max_import_price, 0.1e-3]) * np.max(self.time_series.dt) / 3600 * 10e1
 
     def create_model(self):
         """
@@ -129,6 +139,14 @@ class Optimizer:
         self.variables['n'] = [pulp.LpVariable(f"n_{t}", lowBound=0) for t in self.time_steps]
         self.variables['e'] = [pulp.LpVariable(f"e_{t}", lowBound=0) for t in self.time_steps]
 
+        # penalty variables for exceeding grid power limits
+        # for grid import
+        if self.grid.p_max_imp is not None:
+            self.variables['p_imp_pen'] = [pulp.LpVariable(f"p_imp_pen_{t}", lowBound = 0) for t in self.time_steps] 
+        # for grid export 
+        if self.grid.p_max_imp is not None:
+            self.variables['p_exp_pen'] = [pulp.LpVariable(f"p_exp_pen_{t}", lowBound = 0) for t in self.time_steps]
+
         # Binary variable: power flow direction to / from grid variables
         # these variables
         # 1. avoid direct export from import if export remuneration is greater than import cost
@@ -176,7 +194,7 @@ class Optimizer:
         for i, bat in enumerate(self.batteries):
             objective += self.variables['s'][i][-1] * bat.p_a
 
-        # Penalites for goals that cannot be met
+        # Penalites for charging goals that cannot be met
         for i, bat in enumerate(self.batteries):
             # unmet battery charging goals
             if self.batteries[i].s_goal is not None:
@@ -190,6 +208,14 @@ class Optimizer:
                     objective += - self.goal_penalty_power \
                                 * self.variables['p_demand_pen'][i][t] \
                                 * (1 + (self.T - t)/self.T)
+        # penalties for grid power limits that cannot be met
+        for t in self.time_steps:
+            if self.grid.p_max_imp is not None:
+                # negative target function contribution in a maximizing optimization
+                objective += - self.grid_p_imp_pen * self.variables['p_imp_pen'][t]    
+            if self.grid.p_max_exp is not None:
+                # negative target function contribution in a maximizing optimization
+                objective += - self.grid_p_exp_pen * self.variables['p_exp_pen'][t]           
 
         # Secondary strategies to implement preferences without impact to actual cost
         # prefer charging first, then grid export
@@ -304,6 +330,16 @@ class Optimizer:
             self.problem += self.variables['e'][t] <= self.M * self.variables['y'][t]
             # Import constraint
             self.problem += self.variables['n'][t] <= self.M * (1 - self.variables['y'][t])
+
+        # limit grid import power
+        if self.grid.p_max_imp is not None:
+            for t in self.time_steps:
+                self.problem += self.variables['n'][t] + self.variables['p_imp_pen'][t] <= self.grid.p_max_imp
+
+        # limit grid export power
+        if self.grid.p_max_exp is not None:
+            for t in self.time_steps:
+                self.problem += self.variables['e'][t] + self.variables['p_exp_pen'][t]  <= self.grid.p_max_exp
 
     def solve(self) -> Dict:
         """
