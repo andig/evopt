@@ -80,3 +80,18 @@ Visualization:
         ■ Grid Import   ■ Grid Export   ■ Forecast   ■ Bat 1 Charge Power   ■ Bat 1 Discharge Power
                                                      ■ Bat 2 Charge Power   ■ Bat 2 Discharge Power
 ```
+
+### Development
+
+To develop the evopt codebase, ensure `uv` and `make` are available on your system.
+Installation instructions for `uv` [can be found here](https://docs.astral.sh/uv/getting-started/installation/).
+
+Once `uv` and `make` are available on the PATH, you can run `make run` to set up the project environment and run the optimizer service.
+
+Linting and formatting is run with `make lint`.
+The test suite is run with `make test`.
+To add a new dependency to the project, run `uv add <dependency>`.
+To upgrade all depdendencies to their latest version, run `make upgrade`.
+
+If you are using VSCode, we recommend the [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python), [autopep8](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8), and [ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) extensions.
+Set up `autopep8` as your formatter for Python files.
