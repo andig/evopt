@@ -4,7 +4,7 @@ import jwt
 from flask import Flask, jsonify, request
 from flask_restx import Api, Resource, fields
 
-from .optimizer import BatteryConfig, OptimizationStrategy, Optimizer, TimeSeriesData
+from .optimizer import BatteryConfig, GridConfig, OptimizationStrategy, Optimizer, TimeSeriesData
 
 app = Flask(__name__)
 
@@ -45,6 +45,12 @@ strategy_model = api.model('OptimizationStrategy', {
     'discharging_strategy': fields.String(required=False, description='Sets a strategy for discharging in situations where choices are cost neutral.')
 })
 
+grid_model = api.model('GridConfig', {
+    'p_max_imp': fields.Float(required=False, description='Maximum grid import power in W'),
+    'p_max_exp': fields.Float(required=False, description='Maximum grid export power in W'),
+    'prc_p_imp_exc': fields.Float(required=False, description='price per W to consider in case the import limit is exceeded. ')
+})
+
 battery_config_model = api.model('BatteryConfig', {
     'charge_from_grid': fields.Boolean(required=False, description='Controls whether the battery can be charged from the grid.'),
     'discharge_to_grid': fields.Boolean(required=False, description='Controls whether the battery can discharge to grid.'),
@@ -69,6 +75,7 @@ time_series_model = api.model('TimeSeries', {
 
 optimization_input_model = api.model('OptimizationInput', {
     'strategy': fields.Nested(strategy_model, required=False, description='Optimization strategy'),
+    'grid': fields.Nested(grid_model, required=False, description='Grid import and export configuration'),
     'batteries': fields.List(fields.Nested(battery_config_model), required=True, description='Battery configurations'),
     'time_series': fields.Nested(time_series_model, required=True, description='Time series data'),
     'eta_c': fields.Float(required=False, default=0.95, description='Charging efficiency'),
@@ -82,13 +89,21 @@ battery_result_model = api.model('BatteryResult', {
     'state_of_charge': fields.List(fields.Float, description='State of charge at each time step (Wh)')
 })
 
+limit_violation_result_model = api.model('LimitViolationResult', {
+    'grid_import_limit_exceeded': fields.Boolean(description='The energy demand could only be satisfied by violating the grid import limit.'),
+    'grid_export_limit_hit': fields.Boolean(description='The solar yield was reduced due to the limitation of grid export power.')
+})
+
 optimization_result_model = api.model('OptimizationResult', {
     'status': fields.String(description='Optimization status'),
     'objective_value': fields.Float(description='Optimal objective function value'),
+    'limit_violations': fields.Nested(limit_violation_result_model, description='Collection of flags signalling the violation of defined limits'),
     'batteries': fields.List(fields.Nested(battery_result_model), description='Battery optimization results'),
     'grid_import': fields.List(fields.Float, description='Energy imported from grid at each time step (Wh)'),
     'grid_export': fields.List(fields.Float, description='Energy exported to grid at each time step (Wh)'),
-    'flow_direction': fields.List(fields.Integer, description='Binary flow direction (1=export, 0=import)')
+    'flow_direction': fields.List(fields.Integer, description='Binary flow direction (1=export, 0=import)'),
+    'grid_import_overshoot': fields.List(fields.Float, description='Energy above the power limit imported from grid at each time step (Wh)'),
+    'grid_export_overshoot': fields.List(fields.Float, description='Energy not exported due to hitting the grid export power limit at each time step (Wh)')
 })
 
 
@@ -108,12 +123,17 @@ class OptimizeCharging(Resource):
 
             # Parse strategy items with default values
             strat_data = data.get('strategy', {})
-            charging_strat = strat_data.get('charging_strategy', 'none')
-            discharging_strat = strat_data.get('discharging_strategy', 'none')
-
             strategy = OptimizationStrategy(
-                charging_strategy=charging_strat,
-                discharging_strategy=discharging_strat
+                charging_strategy=strat_data.get('charging_strategy', 'none'),
+                discharging_strategy=strat_data.get('discharging_strategy', 'none')
+            )
+
+            # parse grid configuration
+            grid_data = data.get('grid', {})
+            grid = GridConfig(
+                p_max_imp=grid_data.get('p_max_imp', None),
+                p_max_exp=grid_data.get('p_max_exp', None),
+                prc_p_exc_imp=grid_data.get('prc_p_exc_imp', None)
             )
 
             # Parse battery configurations
@@ -166,6 +186,7 @@ class OptimizeCharging(Resource):
             # Create and solve optimizer
             optimizer = Optimizer(
                 strategy=strategy,
+                grid=grid,
                 batteries=batteries,
                 time_series=time_series,
                 eta_c=data.get('eta_c', 0.95),

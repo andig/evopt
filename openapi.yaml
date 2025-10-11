@@ -165,6 +165,23 @@ components:
             Sets a strategy for charging in situations where choices are cost neutral.
             - none (default): no strategy set 
             - discharge_before_import: discharge batteries before importing from grid
+    GridConfig:
+      type: object
+      properties:
+        p_max_imp:
+          type: number
+          minimum: 0
+          description: Maximum grid import power in W
+        p_max_exp:
+          type: number
+          minimum: 0
+          description: Maximum grid export power in W
+        prc_p_imp_exc:
+          type: number
+          minimum: 0
+          description: |
+            price per W to consider in case the import limit is exceeded. 
+            If not specified, the limit will be protected by a hard constraint.
     BatteryConfig:
       type: object
       required:
@@ -295,6 +312,10 @@ components:
           type: object
           $ref: "#/components/schemas/OptimizerStrategy"
           description: Strategy preferences
+        grid: 
+          type: object
+          $ref: "#/components/schemas/GridConfig"
+          description: Grid configuration 
         batteries:
           type: array
           items:
@@ -343,6 +364,16 @@ components:
           description: State of charge at each time step (Wh)
           example: [21650, 19650, 16650, 14150, 12650, 11650]
 
+    LimitViolationResult:
+      type: object
+      properties:
+        grid_import_limit_exceeded: 
+          type: boolean
+          description: The energy demand could only be satisfied by violating the grid import limit.
+        grid_export_limit_hit: 
+          type: boolean
+          description: The solar yield was reduced due to the limitation of grid export power.
+
     OptimizationResult:
       type: object
       properties:
@@ -362,6 +393,10 @@ components:
           nullable: true
           description: Optimal objective function value (economic benefit in currency units). Null if not optimal.
           example: 1250.75
+        limit_violations:
+          type: object
+          $ref: "#/components/schemas/LimitViolationResult"
+          description: status of power limit violations
         batteries:
           type: array
           items:
@@ -391,6 +426,20 @@ components:
             - 0: Import from grid
             - 1: Export to grid
           example: [0, 1, 1, 1, 1, 0]
+        grid_import_overshoot:
+          type: array
+          items:
+            type: number
+            minimum: 0
+          description: Energy above the power limit imported from grid at each time step (Wh)
+          example: [0, 0, 1000, 10, 0, 0]
+        grid_export_overshoot:
+          type: array
+          items:
+            type: number
+            minimum: 0
+          description: Energy not exported due to hitting the grid export power limit at each time step (Wh)
+          example: [0, 0, 1000, 10, 0, 0]
 
     Error:
       type: object

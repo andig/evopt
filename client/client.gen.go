@@ -102,6 +102,28 @@ type Error struct {
 	Message string `json:"message,omitempty"`
 }
 
+// GridConfig defines model for GridConfig.
+type GridConfig struct {
+	// PMaxExp Maximum grid export power in W
+	PMaxExp float32 `json:"p_max_exp,omitempty"`
+
+	// PMaxImp Maximum grid import power in W
+	PMaxImp float32 `json:"p_max_imp,omitempty"`
+
+	// PrcPImpExc price per W to consider in case the import limit is exceeded.
+	// If not specified, the limit will be protected by a hard constraint.
+	PrcPImpExc float32 `json:"prc_p_imp_exc,omitempty"`
+}
+
+// LimitViolationResult defines model for LimitViolationResult.
+type LimitViolationResult struct {
+	// GridExportLimitHit The solar yield was reduced due to the limitation of grid export power.
+	GridExportLimitHit bool `json:"grid_export_limit_hit,omitempty"`
+
+	// GridImportLimitExceeded The energy demand could only be satisfied by violating the grid import limit.
+	GridImportLimitExceeded bool `json:"grid_import_limit_exceeded,omitempty"`
+}
+
 // OptimizationInput defines model for OptimizationInput.
 type OptimizationInput struct {
 	// Batteries Configuration for all batteries in the system
@@ -112,6 +134,7 @@ type OptimizationInput struct {
 
 	// EtaD Discharging efficiency (0 to 1)
 	EtaD       float32           `json:"eta_d,omitempty"`
+	Grid       GridConfig        `json:"grid,omitempty"`
 	Strategy   OptimizerStrategy `json:"strategy,omitempty"`
 	TimeSeries TimeSeries        `json:"time_series"`
 }
@@ -129,8 +152,15 @@ type OptimizationResult struct {
 	// GridExport Energy exported to grid at each time step (Wh)
 	GridExport []float32 `json:"grid_export,omitempty"`
 
+	// GridExportOvershoot Energy not exported due to hitting the grid export power limit at each time step (Wh)
+	GridExportOvershoot []float32 `json:"grid_export_overshoot,omitempty"`
+
 	// GridImport Energy imported from grid at each time step (Wh)
 	GridImport []float32 `json:"grid_import,omitempty"`
+
+	// GridImportOvershoot Energy above the power limit imported from grid at each time step (Wh)
+	GridImportOvershoot []float32            `json:"grid_import_overshoot,omitempty"`
+	LimitViolations     LimitViolationResult `json:"limit_violations,omitempty"`
 
 	// ObjectiveValue Optimal objective function value (economic benefit in currency units). Null if not optimal.
 	ObjectiveValue float32 `json:"objective_value"`
