@@ -27,6 +27,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "autopep8>=2.3.2",
+    "locust>=2.41.6",
     "pytest>=8.4.2",
     "ruff>=0.12.12",
 ]

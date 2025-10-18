@@ -21,6 +21,13 @@ test::
 run::
 	uv run python -m evopt.app
 
+run-gunicorn::
+	uv run gunicorn --bind "0.0.0.0:7050" "evopt.app:app"
+
+loadtest::
+	uv run locust --host http://localhost:7050 --headless -t 30s -u 2 --only-summary
+	uv run locust --host http://localhost:7050 --headless -t 30s -u 4 --only-summary
+
 docker: docker-build docker-push docker-run
 
 docker-build::
