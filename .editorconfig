@@ -17,3 +17,7 @@ indent_size = 2
 [*.{js,html,yml,yaml,json,md,ts}]
 indent_style = space
 indent_size = 2
+
+[*.py]
+indent_style = space
+
