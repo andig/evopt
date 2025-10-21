@@ -579,6 +579,5 @@ class Optimizer:
         if self.is_grid_demand_rate_active:
             clean_objective += - self.grid.prc_p_exc_imp \
                 * pulp.value(self.variables['p_max_imp_exc'])
-        print(clean_objective)
 
         return clean_objective
