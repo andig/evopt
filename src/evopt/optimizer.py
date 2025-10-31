@@ -135,7 +135,7 @@ class Optimizer:
         self.variables['s'] = {}
         for i, bat in enumerate(self.batteries):
             self.variables['s'][i] = [
-                pulp.LpVariable(f"s_{i}_{t}", lowBound=bat.s_min, upBound=bat.s_max)
+                pulp.LpVariable(f"s_{i}_{t}", lowBound=0, upBound=bat.s_max)
                 for t in self.time_steps
             ]
 
@@ -304,8 +304,6 @@ class Optimizer:
         Add constraints related to the energy balance to the model.
         """
 
-        self.time_steps = range(self.T)
-
         # Constraint (2): Power balance for each time step:
         # - solar yield
         # - household consumption
@@ -389,6 +387,16 @@ class Optimizer:
         """
         Add constraints related to battery behavior to the model.
         """
+
+        # contraint for the min SOC. If the battery starts with an tinitial SOC
+        # lesser than the minimum SOC, maximum charging is forced until the min.
+        # SOC is reached
+        for i, bat in enumerate(self.batteries):
+            s_min_corr = bat.s_initial
+            for t in range(1, self.T):
+                s_min_corr += bat.c_max * self.time_series.dt[t] / 3600
+                s_min_corr = np.min([s_min_corr, bat.s_min])
+                self.problem += (self.variables['s'][i][t] >= s_min_corr)
 
         # Constraint (3): Battery dynamics
         for i, bat in enumerate(self.batteries):
