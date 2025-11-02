@@ -206,7 +206,7 @@ func main() {
 				case 1:
 					return asciigraph.DarkOrange
 				default:
-					return asciigraph.Green
+					return asciigraph.Magenta
 				}
 			})...),
 		))
@@ -232,11 +232,17 @@ func main() {
 					return asciigraph.DarkOrange
 				case 6:
 					return asciigraph.DarkRed
+				case 7:
+					return asciigraph.Magenta
+				case 8:
+					return asciigraph.DarkMagenta
 				default:
 					return asciigraph.White
 				}
 			})...),
 		))
+
+		fmt.Printf("\nObjective value: %.4f\n", res.ObjectiveValue)
 	}
 }
 

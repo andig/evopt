@@ -34,6 +34,7 @@ class BatteryConfig:
     p_a: float
     p_demand: Optional[List[float]] = None  # Minimum charge demand (Wh)
     s_goal: Optional[List[float]] = None  # Goal state of charge (Wh)
+    c_priority: int = 0
 
 
 @dataclass
@@ -283,7 +284,7 @@ class Optimizer:
         if self.strategy.charging_strategy == 'charge_before_export':
             for i, bat in enumerate(self.batteries):
                 for t in self.time_steps:
-                    objective += self.variables['c'][i][t] * self.min_import_price * 1.5e-5 * (self.T - t)
+                    objective += - self.variables['e'][t] * self.min_import_price * 1.5e-5 * (self.T - t)
 
         # prefer charging at high solar production times to unload public grid from peaks
         if self.strategy.charging_strategy == 'attenuate_grid_peaks':
@@ -295,7 +296,13 @@ class Optimizer:
         if self.strategy.discharging_strategy == 'discharge_before_import':
             for i, bat in enumerate(self.batteries):
                 for t in self.time_steps:
-                    objective += self.variables['d'][i][t] * self.min_import_price * 5e-6 * (self.T - t)
+                    objective += - self.variables['n'][t] * self.min_import_price * 5e-6 * (self.T - t)
+
+        # charging and discharging priorities
+        for i, bat in enumerate(self.batteries):
+            for t in self.time_steps:
+                objective += self.variables['c'][i][t] * self.min_import_price * 5e-5 * (self.T - t) * bat.c_priority
+                objective += self.variables['d'][i][t] * self.min_import_price * 5e-5 * (self.T - t) * bat.c_priority
 
         self.problem += objective
 

@@ -50,6 +50,9 @@ type BatteryConfig struct {
 	// CMin Minimum charge power in W
 	CMin float32 `json:"c_min"`
 
+	// CPriority Charging and discharging priority compared to other batteries. 2 = highest priority.
+	CPriority int `json:"c_priority,omitempty"`
+
 	// ChargeFromGrid Controls whether the battery can be charged from the grid.
 	//   - True: The battery can be charged from grid at any time. The actual decision is subject
 	//     to the optimization.
@@ -117,7 +120,7 @@ type GridConfig struct {
 
 // LimitViolationResult defines model for LimitViolationResult.
 type LimitViolationResult struct {
-	// GridExportLimitHit The solar yield was reduced due to the limitation of grid export power.
+	// GridExportLimitHit The solar yield in (Wh) that was reduced due to the limitation of grid export power.
 	GridExportLimitHit bool `json:"grid_export_limit_hit,omitempty"`
 
 	// GridImportLimitExceeded The energy demand could only be satisfied by violating the grid import limit.

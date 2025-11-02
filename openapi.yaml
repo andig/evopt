@@ -231,7 +231,7 @@ components:
           type: number
           minimum: 0
           description: Maximum charge power in W
-          example: 11000
+          example: 11000 
         d_max:
           type: number
           minimum: 0
@@ -256,6 +256,12 @@ components:
             minimum: 0
           description: Goal state of charge for this battery at each time step (Wh)
           example: [0, 0, 40000, 0, 0, 0]
+        c_priority:
+          type: integer
+          minimum: 0
+          maximum: 2
+          default: 0
+          description: Charging and discharging priority 0..2 compared to other batteries. 2 = highest priority.
 
     TimeSeries:
       type: object
