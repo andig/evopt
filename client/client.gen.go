@@ -71,6 +71,10 @@ type BatteryConfig struct {
 	// PDemand Minimum charge demand per time step (Wh)
 	PDemand []float32 `json:"p_demand,omitempty"`
 
+	// SCapacity The capacity at 100% SOC in Wh. If not specified s_capacity will be set to s_max.
+	// s_initial must be less or equal s_capacity, otherwise the optimization will return an error.
+	SCapacity float32 `json:"s_capacity,omitempty"`
+
 	// SGoal Goal state of charge for this battery at each time step (Wh)
 	SGoal []float32 `json:"s_goal,omitempty"`
 
@@ -117,7 +121,7 @@ type GridConfig struct {
 
 // LimitViolationResult defines model for LimitViolationResult.
 type LimitViolationResult struct {
-	// GridExportLimitHit The solar yield was reduced due to the limitation of grid export power.
+	// GridExportLimitHit The solar yield in (Wh) that was reduced due to the limitation of grid export power.
 	GridExportLimitHit bool `json:"grid_export_limit_hit,omitempty"`
 
 	// GridImportLimitExceeded The energy demand could only be satisfied by violating the grid import limit.

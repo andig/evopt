@@ -339,7 +339,7 @@
     "limit_violations": {
       "grid_export_limit_hit": true
     },
-    "objective_value": 17.529476,
+    "objective_value": 17.531374666979104,
     "status": "Optimal"
   },
   "request": {

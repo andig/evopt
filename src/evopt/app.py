@@ -54,6 +54,7 @@ grid_model = api.model('GridConfig', {
 battery_config_model = api.model('BatteryConfig', {
     'charge_from_grid': fields.Boolean(required=False, description='Controls whether the battery can be charged from the grid.'),
     'discharge_to_grid': fields.Boolean(required=False, description='Controls whether the battery can discharge to grid.'),
+    's_capacity': fields.Float(required=False, description='Battery capacity at 100% SOC in (Wh)'),
     's_min': fields.Float(required=True, description='Minimum state of charge (Wh)'),
     's_max': fields.Float(required=True, description='Maximum state of charge (Wh)'),
     's_initial': fields.Float(required=True, description='Initial state of charge (Wh)'),
@@ -142,6 +143,7 @@ class OptimizeCharging(Resource):
                 batteries.append(BatteryConfig(
                     charge_from_grid=bat_data.get('charge_from_grid', False),
                     discharge_to_grid=bat_data.get('discharge_to_grid', False),
+                    s_capacity=bat_data.get('s_capacity', bat_data['s_max']),
                     s_min=bat_data['s_min'],
                     s_max=bat_data['s_max'],
                     s_initial=bat_data['s_initial'],

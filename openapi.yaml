@@ -63,7 +63,8 @@ paths:
               $ref: "#/components/schemas/OptimizationInput"
             example:
               batteries:
-                - s_min: 5000
+                - s_capacity: 52000
+                  s_min: 5000
                   s_max: 50000
                   s_initial: 15000
                   s_goal: [0, 0, 40000, 0, 0, 0]
@@ -207,6 +208,12 @@ components:
               - True: The battery can discharge to the grid at any time. The actual decision is
                 subject to the optimization.
               - False: (default) The battery cannot be discharged while power is exported to the grid.
+        s_capacity: 
+          type: number
+          minimum: 0
+          description: |
+            The capacity at 100% SOC in Wh. If not specified s_capacity will be set to s_max.
+            s_initial must be less or equal s_capacity, otherwise the optimization will return an error.
         s_min:
           type: number
           minimum: 0
