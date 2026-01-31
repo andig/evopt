@@ -453,7 +453,15 @@ components:
         message:
           type: string
           description: Error message describing what went wrong
-          example: "All time series must have the same length"
+          example: "Input payload validation failed"
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+          description: Field-specific validation errors. Keys are field paths (e.g., "batteries.0.s_max"), values are error messages.
+          example:
+            batteries.0.s_max: "'s_max' is a required property"
+            time_series.ft: "[] is too short"
 
 tags:
   - name: optimization

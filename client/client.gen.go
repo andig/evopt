@@ -50,7 +50,7 @@ type BatteryConfig struct {
 	// CMin Minimum charge power in W
 	CMin float32 `json:"c_min"`
 
-	// CPriority Charging and discharging priority compared to other batteries. 2 = highest priority.
+	// CPriority Charging and discharging priority 0..2 compared to other batteries. 2 = highest priority.
 	CPriority int `json:"c_priority,omitempty"`
 
 	// ChargeFromGrid Controls whether the battery can be charged from the grid.
@@ -101,6 +101,9 @@ type BatteryResult struct {
 
 // Error defines model for Error.
 type Error struct {
+	// Errors Field-specific validation errors. Keys are field paths (e.g., "batteries.0.s_max"), values are error messages.
+	Errors map[string]string `json:"errors,omitempty"`
+
 	// Message Error message describing what went wrong
 	Message string `json:"message,omitempty"`
 }
