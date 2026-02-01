@@ -3,6 +3,7 @@ import os
 import jwt
 from flask import Flask, jsonify, request
 from flask_restx import Api, Resource, fields
+from werkzeug.exceptions import BadRequest
 
 from .optimizer import BatteryConfig, GridConfig, OptimizationStrategy, Optimizer, TimeSeriesData
 
@@ -35,6 +36,18 @@ def before_request_func():
 api = Api(app, version='1.0', title='EV Charging Optimization API',
           description='Mixed Integer Linear Programming model for EV charging optimization',
           validate=True)
+
+
+@api.errorhandler(BadRequest)
+def handle_validation_error(error):
+    """Rename 'errors' to 'details' in validation responses."""
+    if error.data and 'errors' in error.data:
+        error.data['details'] = error.data['errors']
+        del error.data['errors']
+        return error.data, 400
+    else:
+        raise error
+
 
 # Namespace for the API
 ns = api.namespace('optimize', description='EV Charging Optimization Operations')

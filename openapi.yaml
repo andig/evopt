@@ -454,7 +454,7 @@ components:
           type: string
           description: Error message describing what went wrong
           example: "Input payload validation failed"
-        errors:
+        details:
           type: object
           additionalProperties:
             type: string
