@@ -101,8 +101,8 @@ type BatteryResult struct {
 
 // Error defines model for Error.
 type Error struct {
-	// Errors Field-specific validation errors. Keys are field paths (e.g., "batteries.0.s_max"), values are error messages.
-	Errors map[string]string `json:"errors,omitempty"`
+	// Details Field-specific validation errors. Keys are field paths (e.g., "batteries.0.s_max"), values are error messages.
+	Details map[string]string `json:"details,omitempty"`
 
 	// Message Error message describing what went wrong
 	Message string `json:"message,omitempty"`
