@@ -147,7 +147,7 @@ class OptimizeCharging(Resource):
             grid = GridConfig(
                 p_max_imp=grid_data.get('p_max_imp', None),
                 p_max_exp=grid_data.get('p_max_exp', None),
-                prc_p_exc_imp=grid_data.get('prc_p_exc_imp', None)
+                prc_p_exc_imp=grid_data.get('prc_p_imp_exc', None)
             )
 
             # Parse battery configurations
