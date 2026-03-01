@@ -116,9 +116,9 @@ type GridConfig struct {
 	// PMaxImp Maximum grid import power in W
 	PMaxImp float32 `json:"p_max_imp,omitempty"`
 
-	// PrcPImpExc price per W to consider in case the import limit is exceeded.
+	// PrcPExcImp price per W to consider in case the import limit is exceeded.
 	// If not specified, the limit will be protected by a hard constraint.
-	PrcPImpExc float32 `json:"prc_p_imp_exc,omitempty"`
+	PrcPExcImp float32 `json:"prc_p_exc_imp,omitempty"`
 }
 
 // LimitViolationResult defines model for LimitViolationResult.

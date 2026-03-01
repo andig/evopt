@@ -176,7 +176,7 @@ components:
           type: number
           minimum: 0
           description: Maximum grid export power in W
-        prc_p_imp_exc:
+        prc_p_exc_imp:
           type: number
           minimum: 0
           description: |
