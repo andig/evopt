@@ -498,8 +498,8 @@ class Optimizer:
         # grid import limit
         grid_imp_limit_violated = False
         e_grid_imp_overshoot = []
-        if self.grid.p_max_imp is not None and not self.is_grid_demand_rate_active:
-            grid_imp_limit_violated = (np.max([pulp.value(var) for var in self.variables['e_imp_lim_exc']]) > 0.1)
+        if self.grid.p_max_imp is not None:
+            grid_imp_limit_violated = (np.max([pulp.value(var) for var in self.variables['e_imp_lim_exc']]) > 0)
             e_grid_imp_overshoot = [pulp.value(var) for var in self.variables['e_imp_lim_exc']]
         # grid export limit
         grid_exp_limit_hit = False
