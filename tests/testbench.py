@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
-from evopt.app import app
+from optimizer.app import app
 
 # help text
 action_help = "create: create a new test case from a json request. \n \

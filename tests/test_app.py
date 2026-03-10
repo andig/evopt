@@ -5,7 +5,7 @@ import pathlib
 import numpy
 import pytest
 
-from evopt.app import app
+from optimizer.app import app
 
 
 @pytest.mark.parametrize('test_case', pathlib.Path('test_cases').glob('*.json'))
