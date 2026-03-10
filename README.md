@@ -1,6 +1,6 @@
 # optimizer
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/andig/evopt.svg)](https://pkg.go.dev/github.com/andig/evopt)
+[![Go Reference](https://pkg.go.dev/badge/github.com/evcc-io/optimizer.svg)](https://pkg.go.dev/github.com/evcc-io/optimizer)
 
 Inspired by https://github.com/Akkudoktor-EOS/EOS/pull/462
 
@@ -53,6 +53,7 @@ Visualization:
                                                  Optimization - SoC
                                              ■ Bat 1 SoC   ■ Bat 2 SoC
 ```
+
 ```
  11000 ┤                  ╭──────────────────────────╮
  10450 ┤                 ╭╯                   ╭╮     ╰──────────╮
