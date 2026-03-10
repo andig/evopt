@@ -1,4 +1,4 @@
-app = 'evopt'
+app = 'optimizer'
 primary_region = 'fra'
 kill_signal = 'SIGINT'
 kill_timeout = '5s'

@@ -1,4 +1,4 @@
-module github.com/andig/evopt
+module github.com/evcc-io/optimizer
 
 go 1.24.5
 

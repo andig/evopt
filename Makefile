@@ -1,4 +1,4 @@
-DOCKER_IMAGE := andig/evopt
+DOCKER_IMAGE := evcc-io/optimizer
 
 default: build docker-build
 
@@ -19,10 +19,10 @@ test::
 	uv run pytest
 
 run::
-	uv run python -m evopt.app
+	uv run python -m optimizer.app
 
 run-gunicorn::
-	uv run gunicorn --bind "0.0.0.0:7050" "evopt.app:app"
+	uv run gunicorn --bind "0.0.0.0:7050" "optimizer.app:app"
 
 loadtest::
 	uv run locust --host http://localhost:7050 --headless -t 30s -u 2 --only-summary

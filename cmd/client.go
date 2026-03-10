@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evopt/client"
+	"github.com/evcc-io/optimizer/client"
 	"github.com/guptarohit/asciigraph"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/olekukonko/tablewriter"

@@ -27,4 +27,4 @@ COPY --from=builder --chown=app:app /app/.venv /app/.venv
 ENV OPTIMIZER_TIME_LIMIT=25
 ENV OPTIMIZER_NUM_THREADS=1
 ENV GUNICORN_CMD_ARGS="--workers 4 --max-requests 32" 
-CMD ["/app/.venv/bin/gunicorn", "--bind", "0.0.0.0:7050", "evopt.app:app"]
+CMD ["/app/.venv/bin/gunicorn", "--bind", "0.0.0.0:7050", "optimizer.app:app"]
