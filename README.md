@@ -1,4 +1,4 @@
-# evopt
+# optimizer
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/andig/evopt.svg)](https://pkg.go.dev/github.com/andig/evopt)
 
@@ -83,7 +83,7 @@ Visualization:
 
 ### Development
 
-To develop the evopt codebase, ensure `uv` and `make` are available on your system.
+Optimizer relies on `uv` and `make` being available.
 Installation instructions for `uv` [can be found here](https://docs.astral.sh/uv/getting-started/installation/).
 
 Once `uv` and `make` are available on the PATH, you can run `make run` to set up the project environment and run the optimizer service.
