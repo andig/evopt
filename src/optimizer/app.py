@@ -60,6 +60,7 @@ strategy_model = api.model('OptimizationStrategy', {
 
 grid_model = api.model('GridConfig', {
     'p_max_imp': fields.Float(required=False, description='Maximum grid import power in W'),
+    'p_max_abs_imp': fields.Float(required=False, description='Absolute physical grid import limit in W. Hard cap that can never be exceeded.'),
     'p_max_exp': fields.Float(required=False, description='Maximum grid export power in W'),
     'prc_p_exc_imp': fields.Float(required=False, description='price per W to consider in case the import limit is exceeded. ')
 })
@@ -146,6 +147,7 @@ class OptimizeCharging(Resource):
             grid_data = data.get('grid', {})
             grid = GridConfig(
                 p_max_imp=grid_data.get('p_max_imp', None),
+                p_max_abs_imp=grid_data.get('p_max_abs_imp', None),
                 p_max_exp=grid_data.get('p_max_exp', None),
                 prc_p_exc_imp=grid_data.get('prc_p_exc_imp', None)
             )

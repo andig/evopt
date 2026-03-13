@@ -17,6 +17,7 @@ class OptimizationStrategy:
 @dataclass
 class GridConfig:
     p_max_imp: float
+    p_max_abs_imp: float
     p_max_exp: float
     prc_p_exc_imp: float
 
@@ -391,6 +392,11 @@ class Optimizer:
             for t in self.time_steps:
                 self.problem += self.variables['e_imp_lim_exc'][t] \
                     <= self.variables['p_max_imp_exc'] * self.time_series.dt[t] / 3600
+
+            # hard physical cap on how far above p_max_imp the import can go
+            if self.grid.p_max_abs_imp is not None:
+                self.problem += self.variables['p_max_imp_exc'] \
+                    <= self.grid.p_max_abs_imp - self.grid.p_max_imp
 
     def _add_battery_constraints(self):
         """
