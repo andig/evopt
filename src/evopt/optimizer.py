@@ -494,19 +494,24 @@ class Optimizer:
             for t in self.time_steps:
                 e_grid_import[t] += pulp.value(self.variables['e_imp_lim_exc'][t])
 
+       # snap near-zero solver noise to zero
+        eps = 1e-6
+
         # get limit violations
         # grid import limit
         grid_imp_limit_violated = False
         e_grid_imp_overshoot = []
         if self.grid.p_max_imp is not None:
-            grid_imp_limit_violated = (np.max([pulp.value(var) for var in self.variables['e_imp_lim_exc']]) > 0.1)
-            e_grid_imp_overshoot = [pulp.value(var) for var in self.variables['e_imp_lim_exc']]
+            e_grid_imp_overshoot = [max(0, pulp.value(var)) if pulp.value(var) > eps else 0
+                                    for var in self.variables['e_imp_lim_exc']]
+            grid_imp_limit_violated = max(e_grid_imp_overshoot) > 0
         # grid export limit
         grid_exp_limit_hit = False
         e_grid_exp_overshoot = []
         if self.grid.p_max_exp is not None:
-            grid_exp_limit_hit = (np.max([pulp.value(var) for var in self.variables['e_exp_lim_exc']]) > 0.1)
-            e_grid_exp_overshoot = [pulp.value(var) for var in self.variables['e_exp_lim_exc']]
+            e_grid_exp_overshoot = [max(0, pulp.value(var)) if pulp.value(var) > eps else 0
+                                    for var in self.variables['e_exp_lim_exc']]
+            grid_exp_limit_hit = max(e_grid_exp_overshoot) > 0
 
         if status == 'Optimal':
             result = {
