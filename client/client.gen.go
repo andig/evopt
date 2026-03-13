@@ -110,6 +110,11 @@ type Error struct {
 
 // GridConfig defines model for GridConfig.
 type GridConfig struct {
+	// PMaxAbsImp Absolute physical grid import limit in W. Hard cap that can never be
+	// exceeded, regardless of price penalty. Use to model fuse rating or
+	// cable capacity.
+	PMaxAbsImp float32 `json:"p_max_abs_imp,omitempty"`
+
 	// PMaxExp Maximum grid export power in W
 	PMaxExp float32 `json:"p_max_exp,omitempty"`
 
