@@ -214,6 +214,8 @@ class OptimizeCharging(Resource):
             result = optimizer.solve()
             return result
 
+        except ValueError as e:
+            api.abort(400, f"Invalid configuration: {str(e)}")
         except Exception as e:
             api.abort(500, f"Optimization failed: {str(e)}")
 
