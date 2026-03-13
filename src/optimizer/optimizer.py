@@ -99,6 +99,15 @@ class Optimizer:
         if self.grid.p_max_imp is not None and self.grid.prc_p_exc_imp is not None:
             self.is_grid_demand_rate_active = True
 
+        # validate p_max_abs_imp configuration
+        if self.grid.p_max_abs_imp is not None:
+            if self.grid.p_max_imp is None:
+                raise ValueError("p_max_abs_imp requires p_max_imp to be set")
+            if self.grid.p_max_abs_imp < self.grid.p_max_imp:
+                raise ValueError(
+                    f"p_max_abs_imp ({self.grid.p_max_abs_imp}) must be >= p_max_imp ({self.grid.p_max_imp})"
+                )
+
     def create_model(self):
         """
         Create and initialize the MILP model
