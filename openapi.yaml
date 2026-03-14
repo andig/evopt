@@ -181,8 +181,15 @@ components:
           type: number
           minimum: 0
           description: |
-            price per W to consider in case the import limit is exceeded. 
+            price per W to consider in case the import limit is exceeded.
             If not specified, the limit will be protected by a hard constraint.
+        p_max_abs_imp:
+          type: number
+          minimum: 0
+          description: |
+            Absolute physical grid import limit in W. Hard cap that can never be
+            exceeded, regardless of price penalty. Use to model fuse rating or
+            cable capacity.
     BatteryConfig:
       type: object
       required:
