@@ -2,6 +2,8 @@ name: Deploy
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ chore/deployment ]  # TODO remove before merge
 
 env:
   IMAGE: evcc/optimizer
