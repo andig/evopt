@@ -23,17 +23,3 @@ jobs:
         run: uv run ruff check
       - name: Test
         run: uv run pytest
-
-  docker:
-    name: Docker
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-      - name: Build
-        uses: docker/build-push-action@v6
-        with:
-          push: false
-          # To be changed
-          tags: andig/evopt:latest
