@@ -58,7 +58,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               type: 'liveness'
               httpGet: {
-                path: '/health'
+                path: '/optimize/health'
                 port: 7050
               }
               periodSeconds: 30
@@ -67,7 +67,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             {
               type: 'startup'
               httpGet: {
-                path: '/health'
+                path: '/optimize/health'
                 port: 7050
               }
               periodSeconds: 5
