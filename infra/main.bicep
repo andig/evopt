@@ -55,7 +55,14 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         external: true
         targetPort: 7050
       }
-}
+      secrets: [
+        {
+          name: 'jwt-token-secret'
+          keyVaultUrl: '${keyVault.properties.vaultUri}secrets/jwt-token-secret'
+          identity: 'system'
+        }
+      ]
+    }
     template: {
       containers: [
         {
@@ -69,6 +76,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             { name: 'OPTIMIZER_TIME_LIMIT', value: '25' }
             { name: 'OPTIMIZER_NUM_THREADS', value: '1' }
             { name: 'GUNICORN_CMD_ARGS', value: '--workers 4 --max-requests 32 --access-logfile -' }
+            { name: 'JWT_TOKEN_SECRET', secretRef: 'jwt-token-secret' }
           ]
           probes: [
             {
