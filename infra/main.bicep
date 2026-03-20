@@ -55,14 +55,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
         external: true
         targetPort: 7050
       }
-      secrets: [
-        {
-          name: 'jwt-token-secret'
-          keyVaultUrl: '${keyVault.properties.vaultUri}secrets/jwt-token-secret'
-          identity: 'system'
-        }
-      ]
-    }
+}
     template: {
       containers: [
         {
@@ -76,7 +69,6 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
             { name: 'OPTIMIZER_TIME_LIMIT', value: '25' }
             { name: 'OPTIMIZER_NUM_THREADS', value: '1' }
             { name: 'GUNICORN_CMD_ARGS', value: '--workers 4 --max-requests 32 --access-logfile -' }
-            { name: 'JWT_TOKEN_SECRET', secretRef: 'jwt-token-secret' }
           ]
           probes: [
             {
@@ -118,15 +110,5 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
   }
 }
 
-// Key Vault Secrets User role for the Container App's managed identity
-resource kvRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, containerApp.id, '4633458b-17de-408a-b874-0445c86b69e6')
-  scope: keyVault
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
-    principalId: containerApp.identity.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
 
 output fqdn string = containerApp.properties.configuration.ingress.fqdn
