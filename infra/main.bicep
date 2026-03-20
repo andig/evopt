@@ -80,18 +80,8 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           ]
           probes: [
             {
-              type: 'liveness'
-              httpGet: {
-                path: '/optimize/health'
-                port: 7050
-              }
-              periodSeconds: 30
-              failureThreshold: 3
-            }
-            {
               type: 'startup'
-              httpGet: {
-                path: '/optimize/health'
+              tcpSocket: {
                 port: 7050
               }
               periodSeconds: 5
