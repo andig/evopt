@@ -1,4 +1,7 @@
 DOCKER_IMAGE ?= evcc/optimizer
+DOCKER_TAG ?= latest
+
+RESOURCE_GROUP ?= rg-optimizer-prod
 
 default: build docker-build
 
@@ -41,3 +44,9 @@ docker-push::
 
 fly::
 	fly deploy --local-only
+
+deploy::
+	az deployment group create \
+		--resource-group $(RESOURCE_GROUP) \
+		--template-file infra/main.bicep \
+		--parameters containerImage=$(DOCKER_IMAGE):$(DOCKER_TAG)
