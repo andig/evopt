@@ -1,4 +1,4 @@
-DOCKER_IMAGE := evcc-io/optimizer
+DOCKER_IMAGE ?= evcc/optimizer
 
 default: build docker-build
 
