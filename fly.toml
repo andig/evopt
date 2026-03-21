@@ -1,4 +1,4 @@
-app = 'optimizer'
+app = 'evopt'
 primary_region = 'fra'
 kill_signal = 'SIGINT'
 kill_timeout = '5s'
@@ -9,6 +9,4 @@ force_https = true
 processes = ['app']
 
 [[vm]]
-memory = '512mb'
-cpu_kind = 'shared'
-cpus = 2
+size = 'performance-2x'
