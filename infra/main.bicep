@@ -75,7 +75,7 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           env: [
             { name: 'OPTIMIZER_TIME_LIMIT', value: '25' }
             { name: 'OPTIMIZER_NUM_THREADS', value: '1' }
-            { name: 'GUNICORN_CMD_ARGS', value: '--workers 4 --max-requests 32' }
+            { name: 'GUNICORN_CMD_ARGS', value: '--workers 4 --timeout 60 --max-requests 32 --max-requests-jitter 8' }
             { name: 'JWT_TOKEN_SECRET', secretRef: 'jwt-token-secret' }
           ]
           probes: [
