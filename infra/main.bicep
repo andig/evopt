@@ -28,6 +28,12 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   }
 }
 
+@description('Custom hostname served by the container app')
+param customHostname string = 'optimizer.evcc.io'
+
+@description('Name of the existing managed certificate in the environment for customHostname')
+param managedCertificateName string = 'mc-optimizer-env-optimizer-evcc-i-5846'
+
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2025-01-01' = {
   name: 'optimizer-env'
   location: location
@@ -54,6 +60,13 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
       ingress: {
         external: true
         targetPort: 7050
+        customDomains: [
+          {
+            name: customHostname
+            bindingType: 'SniEnabled'
+            certificateId: '${containerAppEnv.id}/managedCertificates/${managedCertificateName}'
+          }
+        ]
       }
       secrets: [
         {
