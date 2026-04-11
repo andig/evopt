@@ -82,13 +82,13 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           name: 'optimizer'
           image: containerImage
           resources: {
-            cpu: json('2')
-            memory: '4Gi'
+            cpu: json('1')
+            memory: '2Gi'
           }
           env: [
             { name: 'OPTIMIZER_TIME_LIMIT', value: '25' }
             { name: 'OPTIMIZER_NUM_THREADS', value: '1' }
-            { name: 'GUNICORN_CMD_ARGS', value: '--workers 4 --timeout 60 --max-requests 32 --max-requests-jitter 8' }
+            { name: 'GUNICORN_CMD_ARGS', value: '--workers 1 --timeout 60 --max-requests 64 --max-requests-jitter 16' }
             { name: 'JWT_TOKEN_SECRET', secretRef: 'jwt-token-secret' }
           ]
           probes: [
@@ -105,13 +105,13 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
       ]
       scale: {
         minReplicas: 1
-        maxReplicas: 5
+        maxReplicas: 30
         rules: [
           {
             name: 'http-scaling'
             http: {
               metadata: {
-                concurrentRequests: '10'
+                concurrentRequests: '2'
               }
             }
           }
