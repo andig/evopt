@@ -254,3 +254,18 @@ def test_invalid_solver_result_cannot_bypass_bounds(monkeypatch: pytest.MonkeyPa
         model._solve_continuity(tmpdir, None)
 
     assert {var: var.varValue for var in model.problem.variables()} == solution
+
+
+def test_large_soc_survives_solution_precision(monkeypatch: pytest.MonkeyPatch):
+    # CBC writes eight significant digits, so a 40 kWh SOC comes back rounded to 1e-3 and every
+    # balance row is off by more than the gate tolerance. The candidate must still be kept (#146).
+    model = build()
+    model.batteries[0].s_capacity = model.batteries[0].s_max = 45000
+    model.batteries[0].s_initial = 40000.0123
+    model.batteries[0].s_goal = [0, 0, 0, 0, 0, 41500.0123]
+    seed_fragmented(model, monkeypatch)
+
+    result = model.solve()
+
+    assert starts(result['batteries'][0]['charging_power']) == 1
+    assert pulp.value(model.cost_objective) == pytest.approx(-0.45, abs=1e-5)
