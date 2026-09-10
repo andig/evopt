@@ -123,10 +123,13 @@ PROBE_SHARE = 0.2
 # doing nothing, visible only as a 'Feasible' status. Measured over the stored cases at three time
 # limits, holding this back costs no money and no latency.
 #
-# 0.4 rather than 0.25 because a reserve too small to seat the stage is worse than none: it is idle
-# time the cost stage could have used. The MILP tie break needs 1.6 s on a 245 step model, and 0.25
-# of a 5 s limit is 1.25 s.
-PREFERENCE_TIME_SHARE = 0.4
+# Sized to seat the stage and no more: a reserve too small to seat it is worse than none, idle
+# time the cost stage could have used, and a reserve larger than the stage can spend is the same
+# idle time on the other side. The MILP tie break is capped at MILP_PREFERENCE_TIME_LIMIT, so 0.25
+# of the production 10 s limit is exactly that cap and the LP floors fit in the margin. This was
+# 0.4 before the cap existed, and production paid for it: the revision that introduced the reserve
+# alone moved p95 from 0.99 s to 1.41 s with the share of solves at the 10 s limit unchanged.
+PREFERENCE_TIME_SHARE = 0.25
 
 # clock the tie break MILP may spend. Distinct from PREFERENCE_TIME_SHARE, which is what the
 # cost stage may not eat: the reserve seats the stage, this caps its spend. Measured over 16
