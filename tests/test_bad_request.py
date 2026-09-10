@@ -1,4 +1,5 @@
 import json
+from unittest.mock import ANY
 
 import pytest
 
@@ -28,6 +29,7 @@ def test_malformed_json_returns_400(body, capsys):
     logged = capsys.readouterr().out
     assert json.loads(logged)['bad_request'] == {
         'path': '/optimize/charge-schedule',
+        'client': ANY,
         'reason': 'Invalid request body',
         'fields': [],
         'validator': None,
@@ -43,6 +45,7 @@ def test_missing_fields_are_logged(capsys):
     assert 'errors' not in response.json
     assert json.loads(capsys.readouterr().out)['bad_request'] == {
         'path': '/optimize/charge-schedule',
+        'client': ANY,
         'reason': 'Input payload validation failed',
         'fields': ['batteries', 'time_series'],
         'validator': 'required',
@@ -68,6 +71,7 @@ def test_validation_logs_omit_request_values(payload, validator, capsys):
     assert 'private-' not in logged
     assert json.loads(logged)['bad_request'] == {
         'path': '/optimize/charge-schedule',
+        'client': ANY,
         'reason': 'Input payload validation failed',
         'fields': [field],
         'validator': validator,
@@ -87,11 +91,20 @@ def test_length_mismatch_names_the_series(payload, series, capsys):
     assert response.json == {'message': 'All time series must have the same length', 'lengths': lengths}
     assert json.loads(capsys.readouterr().out)['bad_request'] == {
         'path': '/optimize/charge-schedule',
+        'client': ANY,
         'reason': 'All time series must have the same length',
         'fields': [],
         'validator': None,
         'lengths': lengths,
     }
+
+
+def test_client_version_is_logged(payload, capsys):
+    payload['time_series']['p_N'] = [0.0003]
+
+    app.test_client().post('/optimize/charge-schedule', json=payload, headers={'User-Agent': 'evcc/0.308.1'})
+
+    assert json.loads(capsys.readouterr().out)['bad_request']['client'] == 'evcc/0.308.1'
 
 
 def test_conversion_error_logs_omit_exception_values(payload, monkeypatch, capsys):
