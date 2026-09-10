@@ -74,18 +74,23 @@ def test_validation_logs_omit_request_values(payload, validator, capsys):
     }
 
 
-def test_length_mismatch_preserves_cause(payload, capsys):
-    payload['time_series']['p_N'] = [0.0003]
+@pytest.mark.parametrize('series', ['p_N', 'dt'])
+def test_length_mismatch_names_the_series(payload, series, capsys):
+    payload['time_series'][series] = payload['time_series'][series][:1]
+    payload['batteries'][0]['s_goal'] = [0, 5000]
 
     response = app.test_client().post('/optimize/charge-schedule', json=payload)
 
     assert response.status_code == 400
-    assert response.json == {'message': 'All time series must have the same length'}
+    lengths = {'dt': 2, 'gt': 2, 'ft': 2, 'p_N': 2, 'p_E': 2, 'p_demand': [], 's_goal': [2]}
+    lengths[series] = 1
+    assert response.json == {'message': 'All time series must have the same length', 'lengths': lengths}
     assert json.loads(capsys.readouterr().out)['bad_request'] == {
         'path': '/optimize/charge-schedule',
         'reason': 'All time series must have the same length',
         'fields': [],
         'validator': None,
+        'lengths': lengths,
     }
 
 
