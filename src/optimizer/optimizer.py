@@ -830,9 +830,9 @@ class Optimizer:
         candidate = self.problem.copy()
         candidate += self.cost_objective >= cost - CONTINUITY_TOLERANCE
         candidate += preference >= preferred - CONTINUITY_TOLERANCE
+        peak_values = {side: pulp.value(self.variables[f'p_{side}_peak']) for side in self.peak_sides}
         for side in self.peak_sides:
-            peak = self.variables[f'p_{side}_peak']
-            candidate += peak <= pulp.value(peak) + CONTINUITY_TOLERANCE
+            candidate += self.variables[f'p_{side}_peak'] <= peak_values[side] + CONTINUITY_TOLERANCE
         starts = []
         for i in eligible:
             active = self.variables['z_c'][i]
@@ -850,9 +850,16 @@ class Optimizer:
                     return
             candidate.solve(self._solver(tmpdir, timeLimit=remaining))
             if (candidate.sol_status not in (pulp.LpSolutionOptimal, pulp.LpSolutionIntegerFeasible)
-                    or not _complete_solution(candidate) or not candidate.valid(CONTINUITY_TOLERANCE)):
+                    or not _complete_solution(candidate) or not self._is_integral()):
                 return
-            improved = sum(count_starts()) < sum(before)
+            # CBC writes its solution with 8 significant digits, so a balance row over a 40 kWh
+            # SOC comes back off by up to 1e-3 and candidate.valid(1e-5) rejects every candidate
+            # (#146). CBC already held the model rows; only the bounds added here need checking.
+            improved = (pulp.value(self.cost_objective) >= cost - 2 * CONTINUITY_TOLERANCE
+                        and pulp.value(preference) >= preferred - 2 * CONTINUITY_TOLERANCE
+                        and all(pulp.value(self.variables[f'p_{side}_peak']) <= peak_values[side] + 2 * CONTINUITY_TOLERANCE
+                                for side in self.peak_sides)
+                        and sum(count_starts()) < sum(before))
         except pulp.PulpSolverError:
             return
         finally:
