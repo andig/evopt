@@ -50,7 +50,7 @@ The maximum is a single value out of the horizon, which leaves one gap: a load s
 
 For batteries with a positive minimum charge power (`c_min`), a final tie-break pass prefers fewer charging starts. It preserves the achieved economic objective, existing strategy preferences, and grid peaks within numerical tolerances. This is automatic and needs no additional API setting.
 
-The pass only runs when a battery has multiple charging sessions and gets at most one second of solver time within the remaining request budget. If it cannot find a valid improvement, the previous schedule is retained. Power may still vary within a session, and cheaper prices, charging demands, or grid shaping may still require interruptions. This is a preference, not a guarantee of one continuous session.
+The pass only runs when a battery has multiple charging sessions and gets at most one second of solver time within the remaining request budget. It is skipped when the solve that produced the schedule already took longer than that, since the pass cannot finish faster than it. If it cannot find a valid improvement, the previous schedule is retained. The request log carries the outcome as `continuity` and the solver time as `stages.continuity`. Power may still vary within a session, and cheaper prices, charging demands, or grid shaping may still require interruptions. This is a preference, not a guarantee of one continuous session.
 
 ## API
 

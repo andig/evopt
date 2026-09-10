@@ -149,9 +149,9 @@ def test_every_request_logs_a_solve_line(capsys):
              if line.startswith('{"solve"')]
     assert len(lines) == 1, "every request logs exactly one solve line"
     solve = lines[0]["solve"]
-    assert {"elapsed", "stages", "path", "preferences", "status", "steps"} <= set(solve)
+    assert {"elapsed", "stages", "path", "preferences", "continuity", "status", "steps"} <= set(solve)
     assert solve["elapsed"] > 0
-    assert solve["stages"] and set(solve["stages"]) <= {"build", "probe", "cost", "tie_break"}
+    assert solve["stages"] and set(solve["stages"]) <= {"build", "probe", "cost", "tie_break", "continuity"}
     assert solve["steps"] == len(request["time_series"]["dt"])
 
 
