@@ -83,6 +83,9 @@ def handle_validation_error(error):
 
     logged = {
         'path': request.path,
+        # evcc stamps its version on every request as evcc/<version>. A rejected request is
+        # usually a client bug, and the version is what says which release carries it.
+        'client': request.headers.get('User-Agent'),
         'reason': reason,
         'fields': sorted(error.data.get('details', {})),
         'validator': getattr(error.__context__, 'validator', None),
